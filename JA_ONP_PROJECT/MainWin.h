@@ -7,6 +7,7 @@
 #include <msclr\marshal_cppstd.h>
 #include <filesystem>
 #include <thread>
+#include <windows.h>
 
 namespace JAONPPROJECT {
 
@@ -373,7 +374,7 @@ namespace JAONPPROJECT {
 
 	private: System::Void plikToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		MessageBox::Show(
-			"Kalkulator odwrotnej notacji polskie\nAutor: Konrad Skrzypczyk\nKierunek: Informatyka\nGrupa: 2\nSemestr: V\nRok akademicki: 2020/21",
+			"Kalkulator odwrotnej notacji polskiej\nAutor: Konrad Skrzypczyk\nKierunek: Informatyka\nGrupa: 2\nSemestr: V\nRok akademicki: 2020/21",
 			"O programie",
 			MessageBoxButtons::OK
 		);
@@ -384,7 +385,7 @@ namespace JAONPPROJECT {
 		this->TextBoxPath->Text = this->folderBrowserDialog->SelectedPath;
 	}
 
-	private: 
+	private:
 		void log(String^ s) {
 			s += "\r\n";
 			this->TextBoxLogs->Text += s;
@@ -397,99 +398,150 @@ namespace JAONPPROJECT {
 			return;
 		}
 
+		void log(double val) {
+			std::ostringstream stream;
+			stream << val;
+			log(stream.str());
+		}
+
+	private:
+		/** Convert std::string to String^
+		* @param buff: std::string;
+		* @return String^
+		*/
 		String^ ToDotNetString(std::string buff) {
 			return msclr::interop::marshal_as<String^>(buff);
 		}
 
+		/** Convert String^ to std::string
+		* @param buff: String^;
+		* @return std::string
+		*/
 		std::string ToCppString(String^ buff) {
 			return  msclr::interop::marshal_as<std::string>(buff);
 		}
 
-	private: 
-		typedef int(_stdcall* TEST_METHOD)(int, int);
-
-		void logSettings() {
-			this->TextBoxLogs->Text = "";
-			log("############ USTAWIENIA ############");
-			log("Dane Ÿród³owe: " + this->TextBoxPath->Text);
-			this->RadioBtnDataTypeClassic ?
-				log("Notacja danych wejœciowych: infiksowa (klasyczna)") : log("Notacja danych: ONP");
-			log("Iloœæ w¹tków: " + this->NumericThreads->Value.ToString());
-			this->RadioBtnCpp ?
-				log("Implementacja: C++") : log("Implementacja: ASM");
-			log("########### /USTAWIENIA ############");
-			log("");
-		}
-
+		// Additional alias to ConvertToRPN function from DLL
+		typedef char* (_stdcall* CONVERT_TO_RPN)(const char*);
+			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
 		// TODO: validate();
 
-		logSettings();
+		this->TextBoxLogs->Text = "";
+		log("================PARAMETRY=================");
+		log("Dane Ÿród³owe: " + this->TextBoxPath->Text);
+		log("Iloœæ w¹tków: " + this->NumericThreads->Value.ToString());
+		this->RadioBtnCpp->Checked ? log("Implementacja: C++") : log("Implementacja: ASM");
 
 		HINSTANCE hDll = NULL;
-		TEST_METHOD testMethod;
+		CONVERT_TO_RPN convertToRpn;
 
+		log("=================BIBLIOTEKA=================");
 		log("Próba ³adowania biblioteki DLL, proszê czekaæ ...");
-		this->RadioBtnCpp->Checked ? 
-			hDll = LoadLibrary(TEXT("DLLCpp")) : hDll = LoadLibrary(TEXT("DLLAsm"));
+		hDll = this->RadioBtnCpp->Checked ?
+			LoadLibrary(TEXT("DLLCpp")) : LoadLibrary(TEXT("DLLAsm"));
 
 		try {
 			if (hDll != NULL)
 			{
 				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
 				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
-				testMethod = (TEST_METHOD)GetProcAddress(hDll, "TestMethod");
+				convertToRpn = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
 
-				if (testMethod != NULL)
+				if (convertToRpn != NULL)
 				{
 					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");
+					log("===================PLIKI=====================");
 					log("Rozpoczêcie wczytywania i przetwarzania danych z plików");
 
-					std::string line;
+					int i;
+					std::string line[2];
 					std::string path = ToCppString(this->TextBoxPath->Text);
-					
+
 					// TODO: Threads
+					std::stringstream stream;
 
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 
 						// TODO: Check extension
-
-						std::ifstream file(entry.path(), std::ios::in);
 						
+						i = 0;
+						line[0] = std::string();
+						line[1] = std::string();
+						
+						std::ifstream file(entry.path(), std::ios::in);
+
 						if (file.is_open()) {
 							
-							log("Otwarto plik: " + entry.path().string());
-							std::getline(file, line);
-							log(line);
+							log("=== Otwarto plik: " + entry.path().string() + " ===");
+							while (std::getline(file, line[i])) {
+								i++;
+							}
+							try {
+								double freq = 0.0;
+								stream.str(std::string());
+								auto counterStart = StartCounter(freq);
 
-							// TODO: code here
-							//
+								// Convert input to RPN
+								char* onp = (convertToRpn)(line[0].c_str());
+								
+								// Output result to stream
+								for(int c = 0; c < strlen(onp); c++)
+									stream << onp[c];
 
+								// Free allocated memory
+								delete onp;
+								
+								auto time = GetCounter(freq, counterStart);
+								
+								log("Wejœcie -> " + line[0]);
+								log(line[1] + "   =?   " + stream.str());
+								log("Czas ->" + time);
+							} catch(const std::runtime_error& e) {
+								log("=================ERROR===================");
+								log(e.what());
+							}
 						}
 						else log("Nie mo¿na otworzyæ pliku:" + entry.path().string());
 					}
-
-					// Test only
-					log("");
-					log("############ WYNIK ############");
-					log("C++ [-150], ASM [-50]");
-					std::ostringstream val;
-					val << (testMethod)(-100, 50);
-					log(val.str());
-					log("########### /WYNIK ############");
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê funkcji z DLL: [testMethod is NULL]");
 				FreeLibrary(hDll);
 				hDll = NULL;
 			}
 			else throw std::runtime_error("Nie uda³o za³adowaæ siê DLL: [hDLL is NULL]");
-
-		} catch (const std::exception& ex) {
-			log("############ ERROR ############");
+		}
+		catch (const std::exception& ex) {
+			log("=================ERROR===================");
 			log(ex.what());
-			log("###############################");
 		}
 	}
-};
-}
+
+	/** Start counter function
+	*@param PCFreq: double& return cpu frequency
+	*@return time in cpu ticks: __int64
+	*/
+	__int64 StartCounter(double& PCFreq)
+	{
+		LARGE_INTEGER li;
+		if (!QueryPerformanceFrequency(&li))
+			throw std::runtime_error("QueryPerformanceFrequency failed!\n");
+		PCFreq = double(li.QuadPart) / 1000.0;
+		QueryPerformanceCounter(&li);
+		return li.QuadPart;
+	}
+
+	/** Get counter function
+	*@param PCFreq: const double& cpu frequency
+	*@param CounterStart: const __int64& start cpu ticks value
+	*@return time in ms
+	*/
+	double GetCounter(const double& PCFreq, const __int64& CounterStart)
+	{
+		LARGE_INTEGER li;
+		QueryPerformanceCounter(&li);
+		return double(li.QuadPart - CounterStart) / PCFreq;
+	}
+
+};}
