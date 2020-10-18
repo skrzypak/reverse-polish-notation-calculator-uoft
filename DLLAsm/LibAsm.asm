@@ -13,6 +13,7 @@
 ; Adding and implementing new method void ConvertToRPN(const char* data, char* result);
 ;
 ; v0.2:
+; - Adding new function definiton: long double __cdecl CalcRPN(const char* rpn) 
 ;
 ;*/
 
@@ -177,6 +178,8 @@
 		jne @Clear_stack_loop										;tak, skok do nowego obiegu pêtli
 																	;nie, przejœcie dalej
 		
+		mov edi, 0													;dodanie znaku NULL do ³añ. wynikowego
+
 		pop edi														;przywrócenie rejestru edi
 		pop esi														;przywrócenie rejestru esi
 		pop ebx														;przywrócenie rejestru ebx
@@ -210,5 +213,26 @@
 		ret															;powrót z procedury, wynik w EAX
 
 	CheckSignPriority endp
+
+	;Procedura konwertuje pobrane wyra¿enie matematyczne na odwrotn¹ notacjê polsk¹
+	;@param rpn: ptr byte wyra¿enie onp
+	;@return zwraca wynik wyra¿enia onp
+	CalcRPN proc rpn: ptr byte
+		
+		pop esi														;kopia rejestru ESI
+		xor eax, eax												;wyzerowanie EAX
+		mov esi, rpn												;za³adowanie wyr. ONP do ESI
+
+		@LOOP:
+			inc esi													;przejœcie do nastêpnego znaku z RPN
+			; TODO:
+
+			cmp byte ptr [esi], 0									;sprawdzenie, czy ostatni znak [ESI] to '\0'
+		jne @Loop													;rozpoczêcie nowego przebiegu pêtli
+
+		pop esi														;przywrócenie kopii ESI
+		ret															;powrót z procedury, wynik w EAX
+
+	CalcRPN endp
 
 end

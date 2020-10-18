@@ -423,6 +423,9 @@ namespace JAONPPROJECT {
 
 		// Additional alias to ConvertToRPN function from DLL
 		typedef void (_stdcall* CONVERT_TO_RPN)(const char*, char*);
+
+		// Additional alias to CalcRPN function from DLL
+		typedef long double(_stdcall* CALC_RPN)(const char*);
 			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
@@ -435,7 +438,8 @@ namespace JAONPPROJECT {
 		this->RadioBtnCpp->Checked ? log("Implementacja: C++") : log("Implementacja: ASM");
 
 		HINSTANCE hDll = NULL;
-		CONVERT_TO_RPN convertToRpn;
+		CONVERT_TO_RPN convertToRpnProc;
+		CALC_RPN calcRpnProc;
 
 		log("=================BIBLIOTEKA=================");
 		log("Próba ³adowania biblioteki DLL, proszê czekaæ ...");
@@ -447,9 +451,11 @@ namespace JAONPPROJECT {
 			{
 				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
 				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
-				convertToRpn = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
+				
+				convertToRpnProc = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
+				calcRpnProc = (CALC_RPN)GetProcAddress(hDll, "CalcRPN");
 
-				if (convertToRpn != NULL)
+				if (convertToRpnProc != NULL && calcRpnProc != NULL)
 				{
 					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");
 					log("===================PLIKI=====================");
@@ -477,26 +483,31 @@ namespace JAONPPROJECT {
 							log("=== Otwarto plik: " + entry.path().string() + " ===");
 							while (std::getline(file, line[i++])) {}
 							try {
+								log("Wejœcie -> " + line[0]);
+
 								double freq = 0.0;
 								stream.str(std::string());
-								auto counterStart = StartCounter(freq);
 
-								// Allocate result buffor
-								char* onp = (char*)calloc(256, sizeof(char));
-
-								(convertToRpn)(line[0].c_str(), onp);
+								long double result = 0;
+								// Allocate converted RPN buffor
+								char* rpn = (char*)calloc(256, sizeof(char));
 								
+								auto counterStart = StartCounter(freq);
+								(convertToRpnProc)(line[0].c_str(), rpn);
+								result = (calcRpnProc)(rpn);
+								auto time = GetCounter(freq, counterStart);
+
 								// Output result to stream
-								for(int c = 0; c < strlen(onp); c++)
-									stream << onp[c];
+								for(int c = 0; c < strlen(rpn); c++)
+									stream << rpn[c];
 
 								// Free memory
-								delete onp;
-								
-								auto time = GetCounter(freq, counterStart);
-								
-								log("Wejœcie -> " + line[0]);
+								delete rpn;
+
 								log(line[1] + "   =?   " + stream.str());
+								stream.str(std::string());
+								stream << result;
+								log("Wynik:" + stream.str());
 								log("Czas ->" + time);
 							} catch(const std::runtime_error& e) {
 								log("=================ERROR===================");
@@ -506,7 +517,7 @@ namespace JAONPPROJECT {
 						else log("Nie mo¿na otworzyæ pliku:" + entry.path().string());
 					}
 				}
-				else throw std::runtime_error("Nie uda³o wczytaæ siê funkcji z DLL: [testMethod is NULL]");
+				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
 				FreeLibrary(hDll);
 				hDll = NULL;
 			}
@@ -543,5 +554,4 @@ namespace JAONPPROJECT {
 		QueryPerformanceCounter(&li);
 		return double(li.QuadPart - CounterStart) / PCFreq;
 	}
-
-};}
+}; }

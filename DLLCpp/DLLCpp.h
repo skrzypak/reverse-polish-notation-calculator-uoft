@@ -11,12 +11,14 @@
 * =================== CHANELOG =================== 
 * 
 * v0.1:
-* - Adding and implementing new method char* ConvertToRPN(const char* data);
+* - Adding and implementing new method: char* ConvertToRPN(const char* data);
 * 
 * v0.11:
-* - Change of definition from char* __cdecl ConvertToRPN(const char* data) to 
+* - Change of function definition from char* __cdecl ConvertToRPN(const char* data) to 
 * void __cdecl ConvertToRPN(const char* data, char* result);
 * 
+* v0.2:
+* - Adding new function definiton: long double __cdecl CalcRPN(const char* rpn) 
 */
 
 #pragma once
@@ -38,4 +40,10 @@
 * @warning Allocated memory of scope 'result' before call function
 */
 extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result);
+
+/** Calculate reverse polish notation expression
+* @param rpn: const char* reverse polish notation expression
+* @return result of rpn expression: long double
+*/
+extern "C" DLLCpp_API long double __cdecl CalcRPN(const char* rpn);
 

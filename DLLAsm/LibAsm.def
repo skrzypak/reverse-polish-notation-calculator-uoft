@@ -1,3 +1,4 @@
 LIBRARY "DLLAsm"
 EXPORTS
 ConvertToRPN
+CalcRPN

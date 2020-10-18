@@ -76,5 +76,16 @@ void __cdecl ConvertToRPN(const char* data, char* result)
         s.pop();
     }
 
-    //strcpy_s(result, strlen(r.c_str()) + 1, r.c_str());
+    result[c] = '\0';
+}
+
+long double __cdecl CalcRPN(const char* rpn)
+{
+    while (*rpn != '\0')
+    {
+        // TODO:
+
+        rpn++;
+    }
+    return 0;
 }
