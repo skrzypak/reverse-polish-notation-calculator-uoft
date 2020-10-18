@@ -11,9 +11,11 @@
 * =================== CHANELOG =================== 
 * 
 * v0.1:
-* Adding and implementing new method char* ConvertToRPN(const char* data);
+* - Adding and implementing new method char* ConvertToRPN(const char* data);
 * 
-* v0.2:
+* v0.11:
+* - Change of definition from char* __cdecl ConvertToRPN(const char* data) to 
+* void __cdecl ConvertToRPN(const char* data, char* result);
 * 
 */
 
@@ -32,8 +34,8 @@
 
 /* Convert mathematical expression to reverse polish notation
 * @param data: char* mathematical expression
-* @param result: char* converted expression - C# out
-* @warning MEMORY ALLCATED !!!
+* @param result: char* converted expression
+* @warning Allocated memory of scope 'result' before call function
 */
-extern "C" DLLCpp_API char* __cdecl ConvertToRPN(const char* data);
+extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result);
 

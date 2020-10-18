@@ -422,7 +422,7 @@ namespace JAONPPROJECT {
 		}
 
 		// Additional alias to ConvertToRPN function from DLL
-		typedef char* (_stdcall* CONVERT_TO_RPN)(const char*);
+		typedef void (_stdcall* CONVERT_TO_RPN)(const char*, char*);
 			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
@@ -475,22 +475,22 @@ namespace JAONPPROJECT {
 						if (file.is_open()) {
 							
 							log("=== Otwarto plik: " + entry.path().string() + " ===");
-							while (std::getline(file, line[i])) {
-								i++;
-							}
+							while (std::getline(file, line[i++])) {}
 							try {
 								double freq = 0.0;
 								stream.str(std::string());
 								auto counterStart = StartCounter(freq);
 
-								// Convert input to RPN
-								char* onp = (convertToRpn)(line[0].c_str());
+								// Allocate result buffor
+								char* onp = (char*)calloc(256, sizeof(char));
+
+								(convertToRpn)(line[0].c_str(), onp);
 								
 								// Output result to stream
 								for(int c = 0; c < strlen(onp); c++)
 									stream << onp[c];
 
-								// Free allocated memory
+								// Free memory
 								delete onp;
 								
 								auto time = GetCounter(freq, counterStart);

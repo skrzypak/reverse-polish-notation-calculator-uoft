@@ -14,23 +14,23 @@ inline BYTE checkSignPriority(const char& sign)
     }
 }
 
-char* __cdecl ConvertToRPN(const char* data)
+void __cdecl ConvertToRPN(const char* data, char* result)
 {
-    bool wasNum = false;
+    int c = 0;
     BYTE priority;
+    bool wasNum = false;
     std::stack<char> s;
-    std::string r = "";
 
     for(int i = 0; i < strlen(data); i++)
     {
         if ((data[i] >= '0' && data[i] <= '9') || data[i] == '.') {
-            r = r + data[i];
+            result[c++] = data[i];
             wasNum = true;
         }
         else {
 
             if (wasNum) {
-                r = r + ' ';
+                result[c++] = ' ';
                 wasNum = false;
             }
 
@@ -44,19 +44,21 @@ char* __cdecl ConvertToRPN(const char* data)
                 while (s.size())
                 {
                     if (priority < checkSignPriority(s.top())) {
-                        r = r + s.top() + " ";
+                        result[c++] = s.top();
+                        result[c++] = ' ';
                         s.pop();
                     }
                     else break;
                 }
                 s.push(data[i]);
                 break;
-            case '(':
+            case '(':   
                 s.push(data[i]);
                 break;
             case ')':
                 while(s.top() != '(') {
-                    r = r + s.top() + " ";
+                    result[c++] = s.top();
+                    result[c++] = ' ';
                     s.pop();
                 };
                 s.pop();
@@ -67,13 +69,12 @@ char* __cdecl ConvertToRPN(const char* data)
         }
     }
 
-    r += " ";
+    result[c++] = ' ';
     while (s.size() > 0) {
-        r = r + s.top() + " ";
+        result[c++] = s.top();
+        result[c++] = ' ';
         s.pop();
     }
 
-    char* ch = new char[strlen(r.c_str()) + 1];
-    strcpy_s(ch, strlen(r.c_str()) + 1, r.c_str());
-    return ch;
+    //strcpy_s(result, strlen(r.c_str()) + 1, r.c_str());
 }
