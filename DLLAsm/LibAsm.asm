@@ -15,21 +15,21 @@
 ; v0.11:
 ; - Adding new function definiton: long double __cdecl CalcRPN(const char* rpn) 
 ; - Remove macro: .IF .IFELSE .ENDIF
-; - Remove PUSH, POP
+; 
+; v0.2:
+; - 'Rebranding' code to x64
 ;
 ; v0.
 ;
 ;*/
 
-.686p
-.model flat, stdcall
-
 .code
 
 	;Procedura konwertuje pobrane wyra¿enie matematyczne na odwrotn¹ notacjê polsk¹
-	;@param data: ptr byte pobrany ci¹g znaków z pliku
-	;@param result: ptr byte buffor zapisu wyniku
-	;@warning modyfikowane flagi: <uzupe³niæ>
+	;@param RCX: ptr byte pobrany ci¹g znaków z pliku
+	;@param RDX: ptr byte buffor zapisu wyniku
+	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
+	;@warning modyfikowane rejestry: RBX, RCX, RDX
 	ConvertToRPN proc data: ptr byte, result: ptr byte
 		
 		LOCAL wasNum: byte											;zmienna wykorzystywana do dodawania spacji
@@ -38,29 +38,23 @@
 		LOCAL currSign: byte										;zmienna przechowuj¹ca pobrany znak z DATA
 		LOCAL popSign: byte											;zmienna przechowuj¹ca pobrany operator ze stosu
 
-																	;kopia rejestru EBX
-		sub esp, 4													;
-		mov [esp], ebx												;
-																	;kopia rejestru ESI
-		sub esp, 4													;
-		mov [esp], esi												;
-																	;kopia rejestru EDI
-		sub esp, 4													;
-		mov [esp], edi												;
+		push rbp													;kopia rejestru RBP
+		push rsi													;kopia rejestru RSI
+		push rdi													;kopia rejestru RDI
 
-		mov esi, data												;wczytanie wskaŸnik na DATA
-		mov edi, result												;wczytanie wskaŸnika na RESULT
-		xor eax, eax												;EAX = 0
-		mov numOperatorStack, eax									;numOperatorStack = 0
-		mov al, '0'
-		mov wasNum, al
+		mov rsi, rcx												;wczytanie wskaŸnik na DATA (RCX)
+		mov rdi, rdx												;wczytanie wskaŸnika na RESULT (RDX)
+		xor rax, rax												;RAX = 0
+		mov numOperatorStack, eax									;NUM_OPERATOR_STACK = 0
+		mov al, '0'													;AL = 0
+		mov wasNum, al												;WAS_NUM = 0
 
-		dec esi														;indeks DATA[-1]
+		dec rsi														;indeks DATA[-1]
 
 		@LoopInput:													;@LoopInput
 
-			inc esi													;inkrementacja ESI - nastêpny znak
-			mov eax, [esi]											;wczytanie znaku do akumulatora (AL -> znak)
+			inc rsi													;inkrementacja RSI - nastêpny znak
+			mov rax, [rsi]											;wczytanie znaku do akumulatora (AL -> znak)
 			mov currSign, al										;wczytanie pobranego znaku do CURR_SIGN
 			
 			cmp al, 0												;sprawdzenie czy wczytano znak '\0'
@@ -80,14 +74,14 @@
 			cmp al, '.'												;sprawdzenie czy wczytano seperator
 				je @LoadSeperator										;tak, wczytano seperator - skok do @LoadSeperator
 
-			xor ebx, ebx										;wyzerowanie rejestru EBX
+			xor rbx, rbx										;wyzerowanie rejestru RBX
 			mov bl, wasNum										;wczytanie wartoœci WAS_NUM do BL
 			cmp bl, '1'											;sprawdzenie czy do RESULT nale¿y dodaæ spacjê
 				jne @NotAddSpace									;nie, skok do @NotAddSpace
 																	;tak
-				mov ebx, " "											;EBX <- " "
-				mov [edi], ebx											;RESULT <- dodanie spacji
-				inc edi													;zwiêkszenie indeksu RESULT
+				mov rbx, " "											;RBX <- " "
+				mov [rdi], rbx											;RESULT <- dodanie spacji
+				inc rdi													;zwiêkszenie indeksu RESULT
 				mov bl, '0'												;wczytanie '0' do BL
 				mov wasNum, bl											;ustawienie zmiennej WAS_NUM na false ('0')											;
 
@@ -113,8 +107,8 @@
 
 			@LoadNum:											;@LoadNum
 			@LoadSeperator:										;@LoadSeperator
-			mov [edi], eax										;RESULT <- dodanie cyfry do wyniku
-			inc edi												;zwiêkszenie indeksu RESULT
+			mov [rdi], rax										;RESULT <- dodanie cyfry do wyniku
+			inc rdi												;zwiêkszenie indeksu RESULT
 			mov bl, '1'											;wczytanie '1' do BL
 			mov wasNum, bl										;zapisanie do WAS_NUM, ¿e wczytano znak zwi¹zany z liczb¹
 			jmp @LoopInput										;skok do @LoopInput - pobranie nastêpnego znaku
@@ -129,36 +123,38 @@
 			mov currSignPriority, '2'							;ustawienie priorytetu '2' do CURR_SIGN_PRIORITY
 				
 			@CheckStackPriority:								;@CheckStackPriority
-			mov ecx, numOperatorStack							;ECX <- NUM_OPERATOR_STACK
+			mov ecx, numOperatorStack							;RCX <- NUM_OPERATOR_STACK
 			cmp ecx, 0											;sprawdzenie, czy na stosie s¹ jakieœ operatory
 			jz @StackLoopBreak										;brak operatorów, skok do @StackLoopBreak
 				@StackLoop:										;@StackLoop
-					xor ebx, ebx								;wyzerowanie EBX
-																;### DEBUG ### 
-																;pobiernie operatora z stosu
-					mov ebx, [esp]								;
-					add esp, 4									;
+					xor rbx, rbx								;wyzerowanie RBX
+					pop rbx										;pobiernie operatora z stosu
 					mov popSign, bl								;zapisanie pobranego operatora do POP_SIGN
-																;zwrócenie operator na stos
-					sub esp, 4									;
-					mov [esp], ebx								;
+																;ASM x86
+					;push rbx									;zwrócenie operator na stos
+																;<!-- ASM x86 ->
+																;ASM x64
+					push rcx									;wrzucenie licznika pêtli na stos
+					xor rcx, rcx								;RCX <- 0
+					mov cl, bl									;wpisanie do RCX parametru fun. CheckSignPriority
+																;<!-- ASM x64 ->
 					call CheckSignPriority						;sprawdzenie priorytetu operatora na stosie
-					
+																;ASM x64
+					pop rcx										;przywrócenie licznika pêtli
+																;<!-- ASM x64 ->
 					cmp al, currSignPriority					;porówanie priorytetów operatorów
 						jbe @LP										;pierytet jest mniejszy skok do @LP
 																	;priorytet jest wiêkszy	
 																	;
-						mov [edi], ebx								;RESULT <- EBX (ostatni pobrany operator)
-						inc edi										;inkrementacja indeksu RESULT
-						mov ebx, " "								;EBX = " "
-						mov [edi], ebx								;RESULT <- wpisanie spacji
-						inc edi										;inkrementacja indeksu RESULT
+						mov [rdi], rbx								;RESULT <- EBX (ostatni pobrany operator)
+						inc rdi										;inkrementacja indeksu RESULT
+						mov rbx, " "								;RBX = " "
+						mov [rdi], rbx								;RESULT <- wpisanie spacji
+						inc rdi										;inkrementacja indeksu RESULT
 						dec numOperatorStack						;dekrementacj NUM_OPERATOR_STACK
 						jmp @GP										;skok do @GP
 					@LP:										;@LP - priorytet mniejszy
-																	;zwrócenie operatora na stos
-						sub esp, 4									;
-						mov [esp], ebx								;
+						push rbx									;zwrócenie operatora na stos
 						jmp @StackLoopBreak							;skok do @StackLoopBreak
 					@GP:										;@GP
 					dec ecx										;dekrementacja licznika pêtli @StackLoop
@@ -166,39 +162,31 @@
 				jne @StackLoop									;jeœli tak to skok do @StackLoop
 				
 				@StackLoopBreak:								;@StackLoopBreak
-				
-				xor eax, eax									;EAX <- 0
+				xor rax, rax									;RAX <- 0
 				mov al, currSign								;wczytanie do AL wartoœci zmiennej CURR_SIGN
-																;wrzucenie operatora na stos
-				sub esp, 4										;
-				mov [esp], eax									;
+				push rax										;wrzucenie operatora na stos
 				inc numOperatorStack							;inkrementacja NUM_OPERATOR_STACK
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadOpeningParenthesis:							;@LoadOpeningParenthesis	
-																;dodanie znaku ( na stos
-				sub esp, 4										;
-				mov [esp], eax									;
+				push rax										;dodanie znaku ( na stos
 				inc numOperatorStack							;inkrementacja NUM_OPERATOR_STACK
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadClosedParenthesis:								;@LoadClosedParenthesis
-
-				xor edx, edx									;EDX <- 0
-				mov ecx, numOperatorStack						;ECX <- NUM_OPERATOR_STACK - wprowadzenie licznika pêtli @LoopStack
+				xor rdx, rdx									;RDX <- 0
+				mov ecx, numOperatorStack						;RCX <- NUM_OPERATOR_STACK - wprowadzenie licznika pêtli @LoopStack
 				@@LoopStack:									;@@LoopStack
-					xor ebx, ebx								;EBX <- 0
-																;pobranie operatora z stosu
-					mov ebx, [esp]								;
-					add esp, 4									;
+					xor rbx, rbx								;RBX <- 0
+					pop rbx										;pobranie operatora z stosu
 					mov popSign, bl								;zapisanie pobranego operatpra do POP_SIGN
 					cmp bl, '('									;sprawdzenie czy pobrany operator to (
 						je @@LoopStackBreak							;tak, skok do @@LoopStackBreak
-						mov [edi], ebx							;nie, RESULT <- EBX (pobrany operator z  stosu)
-						inc edi									;inkrementacja indeksu RESULT
-						mov ebx, " "							;EBX <- " "
-						mov [edi], ebx							;RESUTL <- spacja
-						inc edi									;inkrementacja indeksu RESULT
+						mov [rdi], rbx							;nie, RESULT <- RBX (pobrany operator z  stosu)
+						inc rdi									;inkrementacja indeksu RESULT
+						mov rbx, " "							;RBX <- " "
+						mov [rdi], rbx							;RESUTL <- spacja
+						inc rdi									;inkrementacja indeksu RESULT
 						dec numOperatorStack					;dekrementacja NUM_OPERATOR_STACK
 						jmp @@LS								;skok do @@LS
 					@@LoopStackBreak:							;@@LoopStackBreak
@@ -214,55 +202,48 @@
 		@LoopBreak:												;@LoopBreak
 		
 		mov cl, " "												;za³adowanie spacji do CL
-		mov [edi], cl											;RESUTL <- dodanie spacji
-		inc edi													;inkrementacja indeksu RESULT
+		mov [rdi], cl											;RESUTL <- dodanie spacji
+		inc rdi													;inkrementacja indeksu RESULT
 
 																;COMM:: wyprowadzenie do ³ancucha wynikowego pozosta³ych znaków na stosie 
 		
 		mov ecx, numOperatorStack								;za³adowanie licznika pêtli (NUM_OPERATOR_STACK
 		@LoopStackClear:										;@LoopStackClear
-																;pobranie operatora z stosu
-			mov ebx, [esp]										;
-			add esp, 4											;
+			pop rbx												;pobranie operatora z stosu
 			mov popSign, bl										;zapisanie pobranego operatora do POP_SIGN
-			mov [edi], ebx										;RESULT << wyprowadzenie operatora do wyniku
-			inc edi												;inkrementacja indeksu RESULT
-			mov ebx, " "										;za³adowanie spacji do EBX
-			mov [edi], ebx										;RESUTL << dodanie spacja
-			inc edi												;inkrementacja indeksu RESULT
+			mov [rdi], rbx										;RESULT << wyprowadzenie operatora do wyniku
+			inc rdi												;inkrementacja indeksu RESULT
+			mov rbx, " "										;za³adowanie spacji do EBX
+			mov [rdi], rbx										;RESUTL << dodanie spacja
+			inc rdi												;inkrementacja indeksu RESULT
 			dec ecx												;dekrementacja licznika pêtli
 			cmp ecx, 0											;sprawdzenie czy s¹ jeszcze jakieœ znaki na stosie
 		jne @LoopStackClear										;tak, skok do nowego obiegu pêtli
 																;nie, przejœcie dalej
 		
-		mov edi, 0												;RESULT << '\0'
-		xor eax, eax											;EAX <- 0
-		mov eax, 1												;EAX <- brak b³êdów, TRUE
+		mov rdi, 0												;RESULT << '\0'
+		xor rax, rax											;RAX <- 0
+		mov rax, 1												;RAX <- brak b³êdów, TRUE
 		
 		@Err:													;@Err
-		mov eax, 0												;EAX <- wyst¹pi³ b³¹d, FALSE
+		mov rax, 0												;RAX <- wyst¹pi³ b³¹d, FALSE
 
-																;przywrócenie EDI
-		mov edi, [esp]											;
-		add esp, 4												;
-																;przywrócenie ESI
-		mov esi, [esp]											;
-		add esp, 4												;
-																;przywrócenie EBX
-		mov ebx, [esp]											;
-		add esp, 4												;
+		pop rdi													;przywrócenie RDI
+		pop rsi													;przywrócenie RSI
+		pop rbp													;przywrócenie RBP
 
-		ret														;return EAX
+		ret														;return RAX
 
 	ConvertToRPN endp
 
 	;Procedura sprawdza priorytet operatora matematycznego
-	;@param sign: byte operator matematyczny
+	;@param CL: byte operator matematyczny
 	;@return zwraca piorytet znaku -> '0', '1', '2'
-	CheckSignPriority proc sign: byte
+	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
+	CheckSignPriority proc
 		
-		xor eax, eax							;wyzerowanie EAX
-		mov al, sign							;AL <- SIGN
+		xor rax, rax							;wyzerowanie RAX
+		mov al, cl								;AL <- CL (SIGN)
 		cmp al, '+'								;sprawdzenie czy pobrano +
 			je @LoadPrirorty1						;tak, skok do @LoadPrirorty1
 		cmp al, '-'								;sprawdzenie czy pobrano -
@@ -272,47 +253,51 @@
 		cmp al, '/'								;sprawdzenie czy pobrano /
 			je @LoadPrirorty2						;tak, skok do @LoadPrirorty2
 		mov al, '0'								;ustawienie piorytetu 0 do AL
-		ret										;return EAX (AL)
+		ret										;return RAX (AL)
 		@LoadPrirorty1: 
 		mov al, '1'								;ustawienie piorytetu 1 AL
-		ret										;return EAX (AL)
+		ret										;return RAX (AL)
 		@LoadPrirorty2: 
 		mov al, '2'								;ustawienie piorytetu 2 AL
-		ret										;return EAX (AL)
+		ret										;return RAX (AL)
 
 	CheckSignPriority endp
 
 	;Procedura konwertuje pobrane wyra¿enie matematyczne na odwrotn¹ notacjê polsk¹
-	;@param rpn: ptr byte wyra¿enie onp
-	;@return zwraca wynik wyra¿enia onp
-	CalcRPN proc rpn: ptr byte
+	;@param RCX: ptr byte wyra¿enie onp
+	;@return zwraca wynik wyra¿enia onp <QWORD>
+	;@warning modyfikowane flagi: <uzupe³niæ>
+	;@warning modyfikowane rejestry: <uzupe³niæ>
+	CalcRPN proc
 		
-													;kopia rejestru ESI
-		sub esp, 4
-		mov [esp], esi
+		push rbp													;kopia rejestru RBP
+		push rsi													;kopia rejestru RSI
+		push rdi													;kopia rejestru RDI
 
-		xor eax, eax								;wyzerowanie EAX
-		mov esi, rpn								;za³adowanie RPN do ESI
+		xor rax, rax												;wyzerowanie RAX
+		mov rsi, rcx												;za³adowanie RPN do ESI
 
-		dec esi										;indeks RPN[-1]
+		dec rsi														;indeks RPN[-1]
 
-		@LOOP:										;@LOOP
-			inc esi									;inkrementacja indeksu tablicy RPN
-			cmp byte ptr [esi], 0					;sprawdzenie czy wczytano znak '\0'
-				je @LOOPBreak							;tak, wyjœcie z pêtli
+		@LOOP:														;@LOOP
+			inc rsi													;inkrementacja indeksu tablicy RPN
+			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
+				je @LOOPBreak											;tak, wyjœcie z pêtli
 
 			; TODO:
+			;
+			;
 
-		jmp @Loop									;skok do @Loop - wczytanie nastêpnego znaku RPN
+		jmp @Loop													;skok do @Loop - wczytanie nastêpnego znaku RPN
 
-		@LOOPBreak:									;@LOOPBreak
+		@LOOPBreak:													;@LOOPBreak
 
-													;przywrócenie kopii ESI
-		mov esi, [esp]								;
-		add esp, 4									;
+		pop rdi														;przywrócenie RDI
+		pop rsi														;przywrócenie RSI
+		pop rbp														;przywrócenie RBP
 		
-		xor eax, eax								;EAX <- 0
-		ret											;return EAX
+		xor rax, rax												;RAX <- 0
+		ret															;return RAX
 
 	CalcRPN endp
 
