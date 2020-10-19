@@ -422,10 +422,10 @@ namespace JAONPPROJECT {
 		}
 
 		// Additional alias to ConvertToRPN function from DLL
-		typedef void (_stdcall* CONVERT_TO_RPN)(const char*, char*);
+		typedef void (* CONVERT_TO_RPN)(const char*, char*);
 
 		// Additional alias to CalcRPN function from DLL
-		typedef long double(_stdcall* CALC_RPN)(const char*);
+		typedef long double(* CALC_RPN)(const char*);
 			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
