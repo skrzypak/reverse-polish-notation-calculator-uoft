@@ -30,7 +30,7 @@
 	;@param RDX: ptr byte buffor zapisu wyniku
 	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
 	;@warning modyfikowane rejestry: RBX, RCX, RDX
-	ConvertToRPN proc data: ptr byte, result: ptr byte
+	ConvertToRPN proc
 		
 		LOCAL wasNum: byte											;zmienna wykorzystywana do dodawania spacji
 		LOCAL currSignPriority: byte								;zmienna przechowuj¹c priorytet pobranego operatora
@@ -269,28 +269,132 @@
 	;@warning modyfikowane flagi: <uzupe³niæ>
 	;@warning modyfikowane rejestry: <uzupe³niæ>
 	CalcRPN proc
-		
+
+		LOCAL currSign: BYTE										;znak wczytywanej liczby
+		LOCAL feature: QWORD										;cecha liczby
+		LOCAL mantissa: QWORD										;mantysa liczby
+		LOCAL featureSize: DWORD									;rozmiar cechy liczby
+		LOCAL mantissaSize: DWORD									;rozmiar mantysy liczby
+
+		LOCAL curr: BYTE											;### DEBUG ###
+
 		push rbp													;kopia rejestru RBP
 		push rsi													;kopia rejestru RSI
 		push rdi													;kopia rejestru RDI
 
 		xor rax, rax												;wyzerowanie RAX
+		mov feature, rax											;zeruje cechê (FEATURE)
+		mov mantissa, rax											;zerujê mantysê (MANTISSA)
+		mov featureSize, eax										;zerujê rozmiar cechy
+		mov mantissaSize, eax										;zerujê rozmiar mantsy
+
 		mov rsi, rcx												;za³adowanie RPN do ESI
+
+		mov bl, byte ptr [rsi]										; ### DEBUG ###
+		mov curr, bl												; ### DEBUG ###
+
+		mov al, '-'													;AL <- '-'
+		cmp byte ptr [rsi], al										;sprawdzam czy pierwsza liczba jest ujemna
+			jne CalcRPN@FirstPlus										;nie, skok do CalcRPN@FirstPlus
+		mov currSign, al											;tak, ³aduje minus do CURR_SIGN
+		jmp CalcRPN@LOOP											;skok do CalcRPN@LOOP
+
+		CalcRPN@FirstPlus:											;CalcRPN@FirstPlus
+		mov al, '+'													;AL <- '+'
+		mov currSign, al											;przyjmuje ¿e pierwsza liczba jest dodatnia
 
 		dec rsi														;indeks RPN[-1]
 
-		@LOOP:														;@LOOP
+		CalcRPN@LOOP:												;CalcRPN@LOOP
 			inc rsi													;inkrementacja indeksu tablicy RPN
+
+			mov bl, byte ptr [rsi]										; ### DEBUG ###
+			mov curr, bl												; ### DEBUG ###
+
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
-				je @LOOPBreak											;tak, wyjœcie z pêtli
+				je CalcRPN@LOOPBreak									;tak, wyjœcie z pêtli
+			mov al, byte ptr [rsi]									;za³adowanie pobranego znaku do AL
+			cmp al, '0'												;sprawdzenie czy pobrany znak to cyfra
+				jae CalcRPN@LoadNum										;tak, skok do CalcRPN@LoadNum
+			cmp al, '+'												;nie, sprawdzenie czy pobrany znak to '+'
+				je CalcRPN@LoadAdd										;tak, skok do CalcRPN@LoadAdd
+			cmp al, '-'												;nie, sprawdzenie czy pobrany znak to '-'
+				je CalcRPN@LoadSub										;tak, skok do CalcRPN@LoadSub
+			cmp al, '*'												;nie, sprawdzenie czy pobrany znak to '*'
+				je CalcRPN@LoadMull										;tak, - skok do CalcRPN@LoadMull
+			cmp al, '/'												;nie, sprawdzenie czy pobrany znak to '/'
+				je CalcRPN@LoadDiv										;tak, skok do CalcRPN@LoadDiv
+			cmp al, ' '												;sprawdzenie czy pobrany znak to spacja
+				je CalcRPN@LoadSpace									;tak, skok do CalcRPN@LoadSpace
+			jmp CalcRPN@Err
+			
+			CalcRPN@LoadNum:
+																	;COMM::wczytanie cechy liczby
+				CalcRPN@LoadFeatureNum:								;CalcRPN@LoadFeatureNum
+					
+					inc featureSize									;inkrementacja rozmiaru cechy liczby
 
-			; TODO:
-			;
-			;
+					;TODO
+					;
+					;
 
-		jmp @Loop													;skok do @Loop - wczytanie nastêpnego znaku RPN
 
-		@LOOPBreak:													;@LOOPBreak
+					inc rsi											;inkrementacja licznika RPN [RSI]
+					mov al, byte ptr [rsi]							;³aduje pobrany znak do AL
+
+					mov bl, byte ptr [rsi]							; ### DEBUG ###
+					mov curr, bl									; ### DEBUG ###
+
+					cmp al, '.'										;sprawdzenie czy wczytano seperator
+						je CalcRPN@LoadMantissaNum						;tak, skok do CalcRPN@LoadMnatissaNum
+					cmp al, " "										;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
+						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
+				jne	CalcRPN@LoadFeatureNum							;nie, to wczytaj nastêpn¹ cyfrê lub seperator
+
+				CalcRPN@LoadMantissaNum:
+
+					inc mantissaSize								;inkrementacja rozmiaru mantysu
+
+					;TODO
+					;
+					;
+
+					inc rsi											;inkrementacja licznika RPN [RSI]
+
+					mov bl, byte ptr [rsi]							; ### DEBUG ###
+					mov curr, bl									; ### DEBUG ###
+
+					mov al, byte ptr [rsi]							;³aduje pobrany znak do AL
+					cmp al, " "										;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
+						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
+				jne CalcRPN@LoadMantissaNum							;nie, to wczytaj nastêpn¹ cyfrê
+
+				CalcRPN@WholeNum:
+
+				;TODO
+				;
+				;
+																		;COM::czyszcenie pod nastêpn¹ liczbê
+				xor rax, rax											;RAX <- 0
+				mov featureSize, eax									;zeruje rozmiar cechy
+				mov mantissaSize, eax									;zeruje rozmiar mantysy
+				mov feature, rax										;zeruje FEATURE
+				mov mantissa, rax										;zeruje MANTISSA
+				mov al, '+'												; AL <- '+'
+				mov currSign, al										;CURR_SING = '+', przyjmujê ¿e nastêpna liczba bêdzie dodatnia
+
+			jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
+			
+			CalcRPN@LoadSpace:										;CalcRPN@LoadSpace
+			CalcRPN@LoadAdd:										;CalcRPN@LoadAdd
+			CalcRPN@LoadSub:										;CalcRPN@LoadSub
+			CalcRPN@LoadMull:										;CalcRPN@LoadMull
+			CalcRPN@LoadDiv:										;CalcRPN@LoadDiv
+
+		jmp CalcRPN@LOOP											;skok do CalcRPN@LOOP - wczytanie nastêpnego znaku RPN
+
+		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
+		CalcRPN@Err:												;CalcRPN@Err
 
 		pop rdi														;przywrócenie RDI
 		pop rsi														;przywrócenie RSI
