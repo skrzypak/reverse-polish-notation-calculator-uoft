@@ -19,7 +19,8 @@
 ; v0.2:
 ; - 'Rebranding' code to x64
 ;
-; v0.
+; v0.21:
+; - ConvertToRPN -> support negative number
 ;
 ;*/
 
@@ -30,6 +31,7 @@
 	;@param RDX: ptr byte buffor zapisu wyniku
 	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
 	;@warning modyfikowane rejestry: RBX, RCX, RDX
+	;@warning wyra¿enie nie mo¿e posiadaæ spacji
 	ConvertToRPN proc
 		
 		LOCAL wasNum: byte											;zmienna wykorzystywana do dodawania spacji
@@ -48,6 +50,12 @@
 		mov numOperatorStack, eax									;NUM_OPERATOR_STACK = 0
 		mov al, '0'													;AL = 0
 		mov wasNum, al												;WAS_NUM = 0
+																	
+																	;TODO: usuwanie spacji z RSI
+
+		cmp byte ptr [rsi], '-'										;sprawdzam, czy pierwszy znak jest '-'
+			mov al, byte ptr [rsi]										;jeœli tak, to AL <- '-'
+			je @LoadNum													;i skok do @LoadNum
 
 		dec rsi														;indeks DATA[-1]
 
@@ -113,8 +121,8 @@
 			mov wasNum, bl										;zapisanie do WAS_NUM, ¿e wczytano znak zwi¹zany z liczb¹
 			jmp @LoopInput										;skok do @LoopInput - pobranie nastêpnego znaku
 
-			@LoadAdd:											;@LoadAdd
 			@LoadSub:											;@LoadSub
+			@LoadAdd:											;@LoadAdd
 			mov currSignPriority, '1'							;ustawienie priorytetu '1' do CURR_SIGN_PRIORITY
 			jmp @CheckStackPriority								;skok do @CheckStackPriority
 			
@@ -171,6 +179,15 @@
 			@LoadOpeningParenthesis:							;@LoadOpeningParenthesis	
 				push rax										;dodanie znaku ( na stos
 				inc numOperatorStack							;inkrementacja NUM_OPERATOR_STACK
+				inc rsi											;sprawdzenie czy przypadkiem nastêpna liczb jest ujemna
+				cmp byte ptr [rsi], '-'							;
+					jne @LOP_NOT_MINUS							;nie, to skok do @LOP_NOT_MINUS
+																;jeœli tak to...
+					xor rax, rax								;RAX <- 0
+					mov al, byte ptr [rsi]						;AL <- '-'
+				jmp @LoadNum									;tak, skok do @LoadNum
+				@LOP_NOT_MINUS:									;@LOP_NOT_MINUS
+					dec rsi										;dekrementacja RSI
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadClosedParenthesis:								;@LoadClosedParenthesis
@@ -274,7 +291,7 @@
 		LOCAL feature: QWORD										;cecha liczby
 		LOCAL mantissa: QWORD										;mantysa liczby
 		LOCAL featureSize: DWORD									;rozmiar cechy liczby
-		LOCAL mantissaSize: DWORD									;rozmiar mantysy liczby
+		LOCAL numOfRaxStack: DWORD									;iloœæ 'rejestrów' RAX na stosie
 
 		LOCAL curr: BYTE											;### DEBUG ###
 
@@ -286,7 +303,7 @@
 		mov feature, rax											;zeruje cechê (FEATURE)
 		mov mantissa, rax											;zerujê mantysê (MANTISSA)
 		mov featureSize, eax										;zerujê rozmiar cechy
-		mov mantissaSize, eax										;zerujê rozmiar mantsy
+		mov numOfRaxStack, eax										;zerujê iloœæ rejestrów RAX na stosie
 
 		mov rsi, rcx												;za³adowanie RPN do ESI
 
@@ -313,47 +330,50 @@
 
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
 				je CalcRPN@LOOPBreak									;tak, wyjœcie z pêtli
-			mov al, byte ptr [rsi]									;za³adowanie pobranego znaku do AL
-			cmp al, '0'												;sprawdzenie czy pobrany znak to cyfra
+			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak to cyfra
 				jae CalcRPN@LoadNum										;tak, skok do CalcRPN@LoadNum
-			cmp al, '+'												;nie, sprawdzenie czy pobrany znak to '+'
+			cmp byte ptr [rsi], '+'									;nie, sprawdzenie czy pobrany znak to '+'
 				je CalcRPN@LoadAdd										;tak, skok do CalcRPN@LoadAdd
-			cmp al, '-'												;nie, sprawdzenie czy pobrany znak to '-'
+			cmp byte ptr [rsi], '-'									;nie, sprawdzenie czy pobrany znak to '-'
 				je CalcRPN@LoadSub										;tak, skok do CalcRPN@LoadSub
-			cmp al, '*'												;nie, sprawdzenie czy pobrany znak to '*'
+			cmp byte ptr [rsi], '*'									;nie, sprawdzenie czy pobrany znak to '*'
 				je CalcRPN@LoadMull										;tak, - skok do CalcRPN@LoadMull
-			cmp al, '/'												;nie, sprawdzenie czy pobrany znak to '/'
+			cmp byte ptr [rsi], '/'									;nie, sprawdzenie czy pobrany znak to '/'
 				je CalcRPN@LoadDiv										;tak, skok do CalcRPN@LoadDiv
-			cmp al, ' '												;sprawdzenie czy pobrany znak to spacja
+			cmp byte ptr [rsi], ' '									;sprawdzenie czy pobrany znak to spacja
 				je CalcRPN@LoadSpace									;tak, skok do CalcRPN@LoadSpace
 			jmp CalcRPN@Err
-			
+
 			CalcRPN@LoadNum:
 																	;COMM::wczytanie cechy liczby
+				xor rcx, rcx										;RCX <- 0
+				mov rcx, 1											;RCX <- 1
 				CalcRPN@LoadFeatureNum:								;CalcRPN@LoadFeatureNum
-					
-					inc featureSize									;inkrementacja rozmiaru cechy liczby
-
-					;TODO
-					;
-					;
-
-
-					inc rsi											;inkrementacja licznika RPN [RSI]
-					mov al, byte ptr [rsi]							;³aduje pobrany znak do AL
-
-					mov bl, byte ptr [rsi]							; ### DEBUG ###
-					mov curr, bl									; ### DEBUG ###
-
-					cmp al, '.'										;sprawdzenie czy wczytano seperator
-						je CalcRPN@LoadMantissaNum						;tak, skok do CalcRPN@LoadMnatissaNum
-					cmp al, " "										;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
+					xor rax, rax									;RAX <- 0
+					mov al, byte ptr [rsi]							;wk³adam znak cyfry do AL
+					push rax										;wk³adam cyfre na stos
+					inc featureSize									;inkrementacja FEATURE_SIZE
+					inc rsi											;inkrementacja indexu RPN [RSI]
+					cmp byte ptr [rsi], '.'							;sprawdzenie czy wczytano seperator
+						je CalcRPN@LoadWholeFeature						;tak, skok do CalcRPN@LoadWholeFeature
+					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
 						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
 				jne	CalcRPN@LoadFeatureNum							;nie, to wczytaj nastêpn¹ cyfrê lub seperator
 
-				CalcRPN@LoadMantissaNum:
+				CalcRPN@LoadWholeFeature:
+					pop rax											;pobieram znak cyfry ze stosu
+					mov curr, bl									; ### DEBUG ###
+				;	mul rbx, rcx									;RBX * RCX [^10...], podniesienie liczby do odpowiedniej podstawy
+				;	mul rcx, 10										;RCX * 10, podniesienie potegi 10
+					add feature, rbx								;dodanie do FEATURE uzyskanego wyniku
+																	;
+																	;
 
-					inc mantissaSize								;inkrementacja rozmiaru mantysu
+					dec featureSize
+					cmp featureSize, 0
+				jne CalcRPN@LoadWholeFeature
+
+				CalcRPN@LoadMantissaNum:
 
 					;TODO
 					;
@@ -364,8 +384,7 @@
 					mov bl, byte ptr [rsi]							; ### DEBUG ###
 					mov curr, bl									; ### DEBUG ###
 
-					mov al, byte ptr [rsi]							;³aduje pobrany znak do AL
-					cmp al, " "										;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
+					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
 						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
 				jne CalcRPN@LoadMantissaNum							;nie, to wczytaj nastêpn¹ cyfrê
 
@@ -377,7 +396,7 @@
 																		;COM::czyszcenie pod nastêpn¹ liczbê
 				xor rax, rax											;RAX <- 0
 				mov featureSize, eax									;zeruje rozmiar cechy
-				mov mantissaSize, eax									;zeruje rozmiar mantysy
+				mov numOfRaxStack, eax									;zeruje iloœæ rejestrów RAX na stosie
 				mov feature, rax										;zeruje FEATURE
 				mov mantissa, rax										;zeruje MANTISSA
 				mov al, '+'												; AL <- '+'
