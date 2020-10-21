@@ -24,6 +24,9 @@
 ;
 ;*/
 
+.const
+	N48 equ 48												;deklaracja sta³ej 48
+
 .code
 
 	;Procedura konwertuje pobrane wyra¿enie matematyczne na odwrotn¹ notacjê polsk¹
@@ -307,16 +310,6 @@
 
 		mov rsi, rcx												;za³adowanie RPN do ESI
 
-		mov bl, byte ptr [rsi]										; ### DEBUG ###
-		mov curr, bl												; ### DEBUG ###
-
-		mov al, '-'													;AL <- '-'
-		cmp byte ptr [rsi], al										;sprawdzam czy pierwsza liczba jest ujemna
-			jne CalcRPN@FirstPlus										;nie, skok do CalcRPN@FirstPlus
-		mov currSign, al											;tak, ³aduje minus do CURR_SIGN
-		jmp CalcRPN@LOOP											;skok do CalcRPN@LOOP
-
-		CalcRPN@FirstPlus:											;CalcRPN@FirstPlus
 		mov al, '+'													;AL <- '+'
 		mov currSign, al											;przyjmuje ¿e pierwsza liczba jest dodatnia
 
@@ -325,8 +318,8 @@
 		CalcRPN@LOOP:												;CalcRPN@LOOP
 			inc rsi													;inkrementacja indeksu tablicy RPN
 
-			mov bl, byte ptr [rsi]										; ### DEBUG ###
-			mov curr, bl												; ### DEBUG ###
+			mov bl, byte ptr [rsi]									; ### DEBUG ###
+			mov curr, bl											; ### DEBUG ###
 
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
 				je CalcRPN@LOOPBreak									;tak, wyjœcie z pêtli
@@ -347,66 +340,92 @@
 			CalcRPN@LoadNum:
 																	;COMM::wczytanie cechy liczby
 				xor rcx, rcx										;RCX <- 0
-				mov rcx, 1											;RCX <- 1
+				mov rcx, 1											;mno¿nik - RCX <- 1
+
+																	;TODO: wyzerowanie rejestru XXX
+
 				CalcRPN@LoadFeatureNum:								;CalcRPN@LoadFeatureNum
 					xor rax, rax									;RAX <- 0
 					mov al, byte ptr [rsi]							;wk³adam znak cyfry do AL
+
+					mov bl, byte ptr [rsi]							; ### DEBUG ###
+					mov curr, bl									; ### DEBUG ###
+
 					push rax										;wk³adam cyfre na stos
 					inc featureSize									;inkrementacja FEATURE_SIZE
 					inc rsi											;inkrementacja indexu RPN [RSI]
 					cmp byte ptr [rsi], '.'							;sprawdzenie czy wczytano seperator
-						je CalcRPN@LoadWholeFeature						;tak, skok do CalcRPN@LoadWholeFeature
+						je CalcRPN@FeatureToDecimal						;tak, skok do CalcRPN@FeatureToDecimal
 					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
-						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
+						je CalcRPN@FeatureToDecimal						;tak, to skok do CalcRPN@FeatureToDecimal
 				jne	CalcRPN@LoadFeatureNum							;nie, to wczytaj nastêpn¹ cyfrê lub seperator
 
-				CalcRPN@LoadWholeFeature:
-					pop rax											;pobieram znak cyfry ze stosu
+				CalcRPN@FeatureToDecimal:
+					pop rbx											;pobieram znaku cyfry ze stosu
 					mov curr, bl									; ### DEBUG ###
-				;	mul rbx, rcx									;RBX * RCX [^10...], podniesienie liczby do odpowiedniej podstawy
-				;	mul rcx, 10										;RCX * 10, podniesienie potegi 10
-					add feature, rbx								;dodanie do FEATURE uzyskanego wyniku
-																	;
-																	;
-
-					dec featureSize
-					cmp featureSize, 0
-				jne CalcRPN@LoadWholeFeature
-
-				CalcRPN@LoadMantissaNum:
 
 					;TODO
 					;
 					;
+																	;zamiana ASCII na cyfrê (BL - '0')
+																	;przemno¿enie przez mno¿nik
+																	;dodanie wyniku do rejestru XXX
+																	;mnoznik * 10
+
+					dec featureSize
+					cmp featureSize, 0
+				jne CalcRPN@FeatureToDecimal
+
+				cmp byte ptr [rsi], " "							;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
+					je CalcRPN@NumReady								;tak, to skok do CalcRPN@NumReady
+
+																	;TODO: mno¿nika <- 0.1
+
+				CalcRPN@LoadMantissaNum:
 
 					inc rsi											;inkrementacja licznika RPN [RSI]
 
 					mov bl, byte ptr [rsi]							; ### DEBUG ###
 					mov curr, bl									; ### DEBUG ###
 
+					;TODO
+					;
+					;
+
+																	;zamiana ASCII na cyfrê (BL - '0')
+																	;przemno¿enie przez mno¿nik
+																	;dodanie wyniku do rejestru XXX
+																	;mnoznik * 0.1
+
 					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano ca³¹ liczbê tzn.spacjê
-						je CalcRPN@WholeNum								;tak, to skok do CalcRPN@WholeNum
+						je CalcRPN@NumReady								;tak, to skok do CalcRPN@WholeNum
 				jne CalcRPN@LoadMantissaNum							;nie, to wczytaj nastêpn¹ cyfrê
 
-				CalcRPN@WholeNum:
+				CalcRPN@NumReady:									;CalcRPN@NumReady:
 
-				;TODO
-				;
-				;
-																		;COM::czyszcenie pod nastêpn¹ liczbê
-				xor rax, rax											;RAX <- 0
-				mov featureSize, eax									;zeruje rozmiar cechy
-				mov numOfRaxStack, eax									;zeruje iloœæ rejestrów RAX na stosie
-				mov feature, rax										;zeruje FEATURE
-				mov mantissa, rax										;zeruje MANTISSA
-				mov al, '+'												; AL <- '+'
-				mov currSign, al										;CURR_SING = '+', przyjmujê ¿e nastêpna liczba bêdzie dodatnia
+																	;TODO::od³o¿enie liczby na stos
+
+																	;COM::czyszcenie pod nastêpn¹ liczbê
+				xor rax, rax										;RAX <- 0
+				mov featureSize, eax								;zeruje rozmiar cechy
+				mov numOfRaxStack, eax								;zeruje iloœæ rejestrów RAX na stosie
+				mov feature, rax									;zeruje FEATURE
+				mov mantissa, rax									;zeruje MANTISSA
+				mov al, '+'											; AL <- '+'
+				mov currSign, al									;CURR_SING = '+', przyjmujê ¿e nastêpna liczba bêdzie dodatnia
 
 			jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
-			
+
+			CalcRPN@LoadSub:										;CalcRPN@LoadSub
+			cmp byte ptr [rsi+1], " "								;sprawdzenie czy wczytano '-' jako operator
+				je CalcRPN@LoadSubOperator								;tak, skok do CalcRPN@LoadSubOperator
+			mov currSign, '-'										;nie, CURR_SIGN = '-'
+			jmp CalcRPN@LOOP										;skok do CalcRPN@LOOP
+
+																	;;TODO::pobranie ze stosu i wykonanie obliczeñ
+			CalcRPN@LoadSubOperator:								;CalcRPN@LoadSubOperator
 			CalcRPN@LoadSpace:										;CalcRPN@LoadSpace
 			CalcRPN@LoadAdd:										;CalcRPN@LoadAdd
-			CalcRPN@LoadSub:										;CalcRPN@LoadSub
 			CalcRPN@LoadMull:										;CalcRPN@LoadMull
 			CalcRPN@LoadDiv:										;CalcRPN@LoadDiv
 
@@ -415,11 +434,12 @@
 		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
 		CalcRPN@Err:												;CalcRPN@Err
 
+		xor rax, rax												;RAX <- 0
+
 		pop rdi														;przywrócenie RDI
 		pop rsi														;przywrócenie RSI
 		pop rbp														;przywrócenie RBP
-		
-		xor rax, rax												;RAX <- 0
+
 		ret															;return RAX
 
 	CalcRPN endp
