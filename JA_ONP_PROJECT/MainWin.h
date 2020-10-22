@@ -425,7 +425,7 @@ namespace JAONPPROJECT {
 		typedef void (* CONVERT_TO_RPN)(const char*, char*);
 
 		// Additional alias to CalcRPN function from DLL
-		typedef long double(* CALC_RPN)(const char*);
+		typedef float(* CALC_RPN)(const char*);
 			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
@@ -488,7 +488,7 @@ namespace JAONPPROJECT {
 								double freq = 0.0;
 								stream.str(std::string());
 
-								long double result = 0;
+								float result = 0;
 								// Allocate converted RPN buffor
 								char* rpn = (char*)calloc(256, sizeof(char));
 								

@@ -79,7 +79,7 @@ void __cdecl ConvertToRPN(const char* data, char* result)
     result[c] = '\0';
 }
 
-long double __cdecl CalcRPN(const char* rpn)
+float __cdecl CalcRPN(const char* rpn)
 {
     while (*rpn != '\0')
     {

@@ -18,7 +18,8 @@
 * void __cdecl ConvertToRPN(const char* data, char* result);
 * 
 * v0.2:
-* - Adding new function definiton: long double __cdecl CalcRPN(const char* rpn) 
+* - Adding new function definiton: long double __cdecl CalcRPN(const char* rpn)
+* - Change of return type  method: CalcRPN(const char* rpn) from long double to float
 */
 
 #pragma once
@@ -43,7 +44,7 @@ extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result);
 
 /** Calculate reverse polish notation expression
 * @param rpn: const char* reverse polish notation expression
-* @return result of rpn expression: long double
+* @return result of rpn expression: float
 */
-extern "C" DLLCpp_API long double __cdecl CalcRPN(const char* rpn);
+extern "C" DLLCpp_API float __cdecl CalcRPN(const char* rpn);
 
