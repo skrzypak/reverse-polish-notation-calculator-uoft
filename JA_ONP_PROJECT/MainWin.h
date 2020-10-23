@@ -85,16 +85,22 @@ namespace JAONPPROJECT {
 	private: System::Windows::Forms::GroupBox^ GroupBoxImplementation;
 	private: System::Windows::Forms::GroupBox^ GroupBoxLogs;
 	private: System::Windows::Forms::TextBox^ TextBoxLogs;
-	private: System::Windows::Forms::GroupBox^ GroupBoxDataEntryNotation;
 
-	private: System::Windows::Forms::RadioButton^ RadioBtnDataTypeONP;
-	private: System::Windows::Forms::RadioButton^ RadioBtnDataTypeClassic;
+
+
+
 
 	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowserDialog;
 	private: System::Windows::Forms::NumericUpDown^ NumericThreads;
 
 	private: System::Windows::Forms::Label^ LabelPath;
 	private: System::Windows::Forms::Button^ BtnPath;
+	private: System::Windows::Forms::GroupBox^ DataOutpuBox;
+	private: System::Windows::Forms::Button^ BtnOutputPath;
+	private: System::Windows::Forms::Label^ label1;
+	private: System::Windows::Forms::TextBox^ TextBoxOutputPath;
+
+
 
 
 
@@ -123,9 +129,6 @@ namespace JAONPPROJECT {
 			this->LabelThreads = (gcnew System::Windows::Forms::Label());
 			this->DataGroup = (gcnew System::Windows::Forms::GroupBox());
 			this->BtnPath = (gcnew System::Windows::Forms::Button());
-			this->GroupBoxDataEntryNotation = (gcnew System::Windows::Forms::GroupBox());
-			this->RadioBtnDataTypeONP = (gcnew System::Windows::Forms::RadioButton());
-			this->RadioBtnDataTypeClassic = (gcnew System::Windows::Forms::RadioButton());
 			this->LabelPath = (gcnew System::Windows::Forms::Label());
 			this->TextBoxPath = (gcnew System::Windows::Forms::TextBox());
 			this->AdditionalSettings = (gcnew System::Windows::Forms::GroupBox());
@@ -134,13 +137,17 @@ namespace JAONPPROJECT {
 			this->GroupBoxLogs = (gcnew System::Windows::Forms::GroupBox());
 			this->TextBoxLogs = (gcnew System::Windows::Forms::TextBox());
 			this->folderBrowserDialog = (gcnew System::Windows::Forms::FolderBrowserDialog());
+			this->DataOutpuBox = (gcnew System::Windows::Forms::GroupBox());
+			this->BtnOutputPath = (gcnew System::Windows::Forms::Button());
+			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->TextBoxOutputPath = (gcnew System::Windows::Forms::TextBox());
 			this->menuStrip->SuspendLayout();
 			this->DataGroup->SuspendLayout();
-			this->GroupBoxDataEntryNotation->SuspendLayout();
 			this->AdditionalSettings->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericThreads))->BeginInit();
 			this->GroupBoxImplementation->SuspendLayout();
 			this->GroupBoxLogs->SuspendLayout();
+			this->DataOutpuBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// RadioBtnCpp
@@ -171,7 +178,7 @@ namespace JAONPPROJECT {
 			// 
 			// BtnDo
 			// 
-			this->BtnDo->Location = System::Drawing::Point(13, 451);
+			this->BtnDo->Location = System::Drawing::Point(13, 475);
 			this->BtnDo->Name = L"BtnDo";
 			this->BtnDo->Size = System::Drawing::Size(586, 34);
 			this->BtnDo->TabIndex = 4;
@@ -184,7 +191,7 @@ namespace JAONPPROJECT {
 			this->menuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->plikToolStripMenuItem });
 			this->menuStrip->Location = System::Drawing::Point(0, 0);
 			this->menuStrip->Name = L"menuStrip";
-			this->menuStrip->Size = System::Drawing::Size(610, 24);
+			this->menuStrip->Size = System::Drawing::Size(608, 24);
 			this->menuStrip->TabIndex = 9;
 			this->menuStrip->Text = L"menuStrip";
 			// 
@@ -209,12 +216,11 @@ namespace JAONPPROJECT {
 			// DataGroup
 			// 
 			this->DataGroup->Controls->Add(this->BtnPath);
-			this->DataGroup->Controls->Add(this->GroupBoxDataEntryNotation);
 			this->DataGroup->Controls->Add(this->LabelPath);
 			this->DataGroup->Controls->Add(this->TextBoxPath);
 			this->DataGroup->Location = System::Drawing::Point(13, 40);
 			this->DataGroup->Name = L"DataGroup";
-			this->DataGroup->Size = System::Drawing::Size(586, 155);
+			this->DataGroup->Size = System::Drawing::Size(586, 84);
 			this->DataGroup->TabIndex = 14;
 			this->DataGroup->TabStop = false;
 			this->DataGroup->Text = L"Dane Ÿród³owe";
@@ -228,39 +234,6 @@ namespace JAONPPROJECT {
 			this->BtnPath->Text = L"Wybierz";
 			this->BtnPath->UseVisualStyleBackColor = true;
 			this->BtnPath->Click += gcnew System::EventHandler(this, &MainWin::BtnPath_Click);
-			// 
-			// GroupBoxDataEntryNotation
-			// 
-			this->GroupBoxDataEntryNotation->Controls->Add(this->RadioBtnDataTypeONP);
-			this->GroupBoxDataEntryNotation->Controls->Add(this->RadioBtnDataTypeClassic);
-			this->GroupBoxDataEntryNotation->Location = System::Drawing::Point(12, 78);
-			this->GroupBoxDataEntryNotation->Name = L"GroupBoxDataEntryNotation";
-			this->GroupBoxDataEntryNotation->Size = System::Drawing::Size(555, 62);
-			this->GroupBoxDataEntryNotation->TabIndex = 17;
-			this->GroupBoxDataEntryNotation->TabStop = false;
-			this->GroupBoxDataEntryNotation->Text = L"Notacja danych wejœciowych";
-			// 
-			// RadioBtnDataTypeONP
-			// 
-			this->RadioBtnDataTypeONP->AutoSize = true;
-			this->RadioBtnDataTypeONP->Location = System::Drawing::Point(181, 29);
-			this->RadioBtnDataTypeONP->Name = L"RadioBtnDataTypeONP";
-			this->RadioBtnDataTypeONP->Size = System::Drawing::Size(143, 17);
-			this->RadioBtnDataTypeONP->TabIndex = 1;
-			this->RadioBtnDataTypeONP->Text = L"Odwrotna notacja polska";
-			this->RadioBtnDataTypeONP->UseVisualStyleBackColor = true;
-			// 
-			// RadioBtnDataTypeClassic
-			// 
-			this->RadioBtnDataTypeClassic->AutoSize = true;
-			this->RadioBtnDataTypeClassic->Checked = true;
-			this->RadioBtnDataTypeClassic->Location = System::Drawing::Point(10, 29);
-			this->RadioBtnDataTypeClassic->Name = L"RadioBtnDataTypeClassic";
-			this->RadioBtnDataTypeClassic->Size = System::Drawing::Size(165, 17);
-			this->RadioBtnDataTypeClassic->TabIndex = 0;
-			this->RadioBtnDataTypeClassic->TabStop = true;
-			this->RadioBtnDataTypeClassic->Text = L"Notacja infiksowa (klasyczna)";
-			this->RadioBtnDataTypeClassic->UseVisualStyleBackColor = true;
 			// 
 			// LabelPath
 			// 
@@ -287,7 +260,7 @@ namespace JAONPPROJECT {
 			this->AdditionalSettings->Controls->Add(this->NumericThreads);
 			this->AdditionalSettings->Controls->Add(this->GroupBoxImplementation);
 			this->AdditionalSettings->Controls->Add(this->LabelThreads);
-			this->AdditionalSettings->Location = System::Drawing::Point(13, 201);
+			this->AdditionalSettings->Location = System::Drawing::Point(13, 225);
 			this->AdditionalSettings->Name = L"AdditionalSettings";
 			this->AdditionalSettings->Size = System::Drawing::Size(586, 102);
 			this->AdditionalSettings->TabIndex = 15;
@@ -318,7 +291,7 @@ namespace JAONPPROJECT {
 			// GroupBoxLogs
 			// 
 			this->GroupBoxLogs->Controls->Add(this->TextBoxLogs);
-			this->GroupBoxLogs->Location = System::Drawing::Point(13, 309);
+			this->GroupBoxLogs->Location = System::Drawing::Point(13, 333);
 			this->GroupBoxLogs->Name = L"GroupBoxLogs";
 			this->GroupBoxLogs->Size = System::Drawing::Size(586, 136);
 			this->GroupBoxLogs->TabIndex = 16;
@@ -339,11 +312,54 @@ namespace JAONPPROJECT {
 			// 
 			this->folderBrowserDialog->RootFolder = System::Environment::SpecialFolder::ApplicationData;
 			// 
+			// DataOutpuBox
+			// 
+			this->DataOutpuBox->Controls->Add(this->BtnOutputPath);
+			this->DataOutpuBox->Controls->Add(this->label1);
+			this->DataOutpuBox->Controls->Add(this->TextBoxOutputPath);
+			this->DataOutpuBox->Location = System::Drawing::Point(13, 135);
+			this->DataOutpuBox->Name = L"DataOutpuBox";
+			this->DataOutpuBox->Size = System::Drawing::Size(586, 84);
+			this->DataOutpuBox->TabIndex = 19;
+			this->DataOutpuBox->TabStop = false;
+			this->DataOutpuBox->Text = L"Okreœlenie katalogu wyjœciowego";
+			// 
+			// BtnOutputPath
+			// 
+			this->BtnOutputPath->Location = System::Drawing::Point(489, 36);
+			this->BtnOutputPath->Name = L"BtnOutputPath";
+			this->BtnOutputPath->Size = System::Drawing::Size(78, 36);
+			this->BtnOutputPath->TabIndex = 18;
+			this->BtnOutputPath->Text = L"Wybierz";
+			this->BtnOutputPath->UseVisualStyleBackColor = true;
+			this->BtnOutputPath->Click += gcnew System::EventHandler(this, &MainWin::BtnOutputPath_Click);
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(238)));
+			this->label1->Location = System::Drawing::Point(9, 26);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(353, 13);
+			this->label1->TabIndex = 14;
+			this->label1->Text = L"Podaj scie¿kê do katalgu w którym maj¹ zostaæ utworzone pliki wynikowe";
+			// 
+			// TextBoxOutputPath
+			// 
+			this->TextBoxOutputPath->Location = System::Drawing::Point(12, 42);
+			this->TextBoxOutputPath->Name = L"TextBoxOutputPath";
+			this->TextBoxOutputPath->ReadOnly = true;
+			this->TextBoxOutputPath->Size = System::Drawing::Size(471, 20);
+			this->TextBoxOutputPath->TabIndex = 9;
+			this->TextBoxOutputPath->Text = L"..\\files";
+			// 
 			// MainWin
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(610, 497);
+			this->ClientSize = System::Drawing::Size(608, 521);
+			this->Controls->Add(this->DataOutpuBox);
 			this->Controls->Add(this->GroupBoxLogs);
 			this->Controls->Add(this->AdditionalSettings);
 			this->Controls->Add(this->DataGroup);
@@ -356,8 +372,6 @@ namespace JAONPPROJECT {
 			this->menuStrip->PerformLayout();
 			this->DataGroup->ResumeLayout(false);
 			this->DataGroup->PerformLayout();
-			this->GroupBoxDataEntryNotation->ResumeLayout(false);
-			this->GroupBoxDataEntryNotation->PerformLayout();
 			this->AdditionalSettings->ResumeLayout(false);
 			this->AdditionalSettings->PerformLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericThreads))->EndInit();
@@ -365,6 +379,8 @@ namespace JAONPPROJECT {
 			this->GroupBoxImplementation->PerformLayout();
 			this->GroupBoxLogs->ResumeLayout(false);
 			this->GroupBoxLogs->PerformLayout();
+			this->DataOutpuBox->ResumeLayout(false);
+			this->DataOutpuBox->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -383,6 +399,11 @@ namespace JAONPPROJECT {
 	private: System::Void BtnPath_Click(System::Object^ sender, System::EventArgs^ e) {
 		this->folderBrowserDialog->ShowDialog();
 		this->TextBoxPath->Text = this->folderBrowserDialog->SelectedPath;
+	}
+
+	private: System::Void BtnOutputPath_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->folderBrowserDialog->ShowDialog();
+		this->TextBoxOutputPath->Text = this->folderBrowserDialog->SelectedPath;
 	}
 
 	private:
@@ -500,7 +521,7 @@ namespace JAONPPROJECT {
 
 								// TODO::Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
 								for (int c = 0; c < strlen(rpn); c++) {
-																				// TODO::Zapis wyrazenia ONP do pliku wynikowego
+																				// TODO::Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
 																				// TODO::Zapis wyniku ONP do pliku wynikowego
 																				// TODO::Zapis czasu przetwarzania do pliku wynikowego
 									stream << rpn[c];							// Wczytanie wyrazenia ONP do stream (logi)
@@ -523,6 +544,7 @@ namespace JAONPPROJECT {
 					stream << time;												// Wczytanie calkowitego czasu do streamu
 					log("Ca³kowity czas przetwarzania plików wyniós³: " + stream.str());
 					delete rpn;													// Zwolnienie zaalokowanej pamieci
+					log("Pliki wynikowe zosta³y zapisane w folderze: " + this->TextBoxOutputPath->Text);
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
 				FreeLibrary(hDll);												// Zwolnienie biblioteki
@@ -561,4 +583,5 @@ namespace JAONPPROJECT {
 		QueryPerformanceCounter(&li);
 		return double(li.QuadPart - CounterStart) / PCFreq;
 	}
+
 }; }
