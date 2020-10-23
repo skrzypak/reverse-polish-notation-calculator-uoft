@@ -308,10 +308,6 @@ namespace JAONPPROJECT {
 			this->TextBoxLogs->Size = System::Drawing::Size(572, 110);
 			this->TextBoxLogs->TabIndex = 0;
 			// 
-			// folderBrowserDialog
-			// 
-			this->folderBrowserDialog->RootFolder = System::Environment::SpecialFolder::ApplicationData;
-			// 
 			// DataOutpuBox
 			// 
 			this->DataOutpuBox->Controls->Add(this->BtnOutputPath);
@@ -473,7 +469,7 @@ namespace JAONPPROJECT {
 				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
 				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
 				
-				// Zaladowanie funkcji bibliotecznych
+																				// Zaladowanie funkcji bibliotecznych
 				convertToRpnProc = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
 				calcRpnProc = (CALC_RPN)GetProcAddress(hDll, "CalcRPN");
 
@@ -498,7 +494,7 @@ namespace JAONPPROJECT {
 						line = std::string();
 						// Zaladowanie pliku
 						std::ifstream file(entry.path(), std::ios::in);
-						if (file.is_open()) {
+						if (file.is_open() && entry.is_regular_file()) {
 							log("======== Otwarto plik: " + entry.path().string() + " ========");
 							std::getline(file, line);							// Wczytanie wyrazenia z pliku
 							// TODO::Sprawdzenie poprawnosci danych
@@ -519,14 +515,24 @@ namespace JAONPPROJECT {
 
 								time += t;										// Zaktualizowanie ogolnego czasu
 
-								// TODO::Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
-								for (int c = 0; c < strlen(rpn); c++) {
-																				// TODO::Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
-																				// TODO::Zapis wyniku ONP do pliku wynikowego
-																				// TODO::Zapis czasu przetwarzania do pliku wynikowego
-									stream << rpn[c];							// Wczytanie wyrazenia ONP do stream (logi)
+																				// Stworzenie pliku do zapisu (nadpisuje pliki)
+								std::string ext = this->RadioBtnCpp->Checked ? "_result_CPP" : "_result_ASM";
+								path = ToCppString(this->TextBoxOutputPath->Text) + "\\" + entry.path().filename().string() + ext;
+								std::ofstream fOut(path, std::ios::out);
+								if(fOut.good()) {
+																							// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
+									fOut << "Wyra¿enie wejœciowe: " << line << '\n';
+									fOut << "Uzyskane wyra¿enie ONP: ";
+									for (int c = 0; c < strlen(rpn); c++) {
+										fOut << rpn[c];										// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
+										stream << rpn[c];									// Wczytanie wyrazenia ONP do stream (logi)
+									}
+									fOut << '\n';
+									fOut << "Uzyskany wynik obliczeñ: " << result << "\n";  // Zapis wyniku ONP do pliku wynikowego
+									fOut << "Uzyskany czas: " << t << '\n';					// Zapis czasu przetwarzania do pliku wynikowego
+									log("Plik wynikowy zosta³ utworzony:" + entry.path().filename().string());
 								}
-									
+								else log("Nie uda³o stworzyæ siê plik wynikowego: " + path);
 								log("Uzyskane wyra¿enie ONP: " + stream.str());
 								stream.str(std::string());
 								stream << result;
@@ -544,7 +550,7 @@ namespace JAONPPROJECT {
 					stream << time;												// Wczytanie calkowitego czasu do streamu
 					log("Ca³kowity czas przetwarzania plików wyniós³: " + stream.str());
 					delete rpn;													// Zwolnienie zaalokowanej pamieci
-					log("Pliki wynikowe zosta³y zapisane w folderze: " + this->TextBoxOutputPath->Text);
+					log("Pliki wynikowe zosta³y utworzone w folderze: " + this->TextBoxOutputPath->Text);
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
 				FreeLibrary(hDll);												// Zwolnienie biblioteki
