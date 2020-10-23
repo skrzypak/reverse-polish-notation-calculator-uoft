@@ -405,27 +405,27 @@ namespace JAONPPROJECT {
 		}
 
 	private:
-		/** Convert std::string to String^
-		* @param buff: std::string;
+		/** Konwertuje std::string na String^
+		* @param buff: std::string
 		* @return String^
 		*/
 		String^ ToDotNetString(std::string buff) {
 			return msclr::interop::marshal_as<String^>(buff);
 		}
 
-		/** Convert String^ to std::string
-		* @param buff: String^;
+		/** Konwertuje String^ na std::string
+		* @param buff: String^
 		* @return std::string
 		*/
 		std::string ToCppString(String^ buff) {
 			return  msclr::interop::marshal_as<std::string>(buff);
 		}
 
-		// Additional alias to ConvertToRPN function from DLL
+		// Typ CONVERT_TO_RPN potrzebny do wywolania funkcji ConvertToRPN z DLL
 		typedef void (* CONVERT_TO_RPN)(const char*, char*);
 
-		// Additional alias to CalcRPN function from DLL
-		typedef float(* CALC_RPN)(const char*);
+		// Typ CALC_RPN potrzebny do wywolania funkcji CalcRPN z DLL
+		typedef double(* CALC_RPN)(const char*);
 			
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
@@ -437,9 +437,9 @@ namespace JAONPPROJECT {
 		log("Iloœæ w¹tków: " + this->NumericThreads->Value.ToString());
 		this->RadioBtnCpp->Checked ? log("Implementacja: C++") : log("Implementacja: ASM");
 
-		HINSTANCE hDll = NULL;
-		CONVERT_TO_RPN convertToRpnProc;
-		CALC_RPN calcRpnProc;
+		HINSTANCE hDll = NULL;				// Uchwyt dla biblioteki
+		CONVERT_TO_RPN convertToRpnProc;	// Uchwyt dla funkcji ConverToRPN 
+		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
 
 		log("=================BIBLIOTEKA=================");
 		log("Próba ³adowania biblioteki DLL, proszê czekaæ ...");
@@ -452,6 +452,7 @@ namespace JAONPPROJECT {
 				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
 				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
 				
+				// Zaladowanie funkcji bibliotecznych
 				convertToRpnProc = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
 				calcRpnProc = (CALC_RPN)GetProcAddress(hDll, "CalcRPN");
 
@@ -460,55 +461,56 @@ namespace JAONPPROJECT {
 					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");
 					log("===================PLIKI=====================");
 					log("Rozpoczêcie wczytywania i przetwarzania danych z plików");
+					log("=============================================");
 
-					int i;
-					std::string line[2];
-					std::string path = ToCppString(this->TextBoxPath->Text);
+					double time = 0.0;											// Czas przetwarzania plików
+					std::string line;											// Zmienna przechowujaca wyrazenie matematyczne z pliku
+					std::string path = ToCppString(this->TextBoxPath->Text);	// Zmienna przechowujaca sciezke do katalogu
 
-					// TODO: Threads
-					std::stringstream stream;
+					std::stringstream stream;									//
+					char* rpn = (char*)calloc(256, sizeof(char));				// Alokacja pamieci dla wyrazenia ONP
 
+					// TODO::Watki
+
+					// Petla przetwarzajaca pliki z podanego folderu
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
-
-						// TODO: Check extension
-						
-						i = 0;
-						line[0] = std::string();
-						line[1] = std::string();
-						
+						line = std::string();
+						// Zaladowanie pliku
 						std::ifstream file(entry.path(), std::ios::in);
-
 						if (file.is_open()) {
-							
-							log("=== Otwarto plik: " + entry.path().string() + " ===");
-							while (std::getline(file, line[i++])) {}
+							log("======== Otwarto plik: " + entry.path().string() + " ========");
+							std::getline(file, line);							// Wczytanie wyrazenia z pliku
+							// TODO::Sprawdzenie poprawnosci danych
+							//
+
 							try {
-								log("Wejœcie -> " + line[0]);
+								log("Wczytane wyra¿enie matematyczne: " + line);
 
 								double freq = 0.0;
-								stream.str(std::string());
+								stream.str(std::string());						// Wyczyszczenie streamu
 
-								float result = 0;
-								// Allocate converted RPN buffor
-								char* rpn = (char*)calloc(256, sizeof(char));
+								double result = 0;								// Wyzerowanie wyniku ONP
 								
-								auto counterStart = StartCounter(freq);
-								(convertToRpnProc)(line[0].c_str(), rpn);
-								result = (calcRpnProc)(rpn);
-								auto time = GetCounter(freq, counterStart);
+								auto counterStart = StartCounter(freq);			// Odpalenie timera
+								(convertToRpnProc)(line.c_str(), rpn);			// Konwersja wyrazenia matemaycznego na ONP
+								result = (calcRpnProc)(rpn);					// Obliczenie wyrazenia ONP
+								auto t = GetCounter(freq, counterStart);		// Zatrzymanie timera i otrzymanie czasu w sekundach
 
-								// Output result to stream
-								for(int c = 0; c < strlen(rpn); c++)
-									stream << rpn[c];
+								time += t;										// Zaktualizowanie ogolnego czasu
 
-								// Free memory
-								delete rpn;
-
-								log(line[1] + "   =?   " + stream.str());
+								// TODO::Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
+								for (int c = 0; c < strlen(rpn); c++) {
+																				// TODO::Zapis wyrazenia ONP do pliku wynikowego
+																				// TODO::Zapis wyniku ONP do pliku wynikowego
+																				// TODO::Zapis czasu przetwarzania do pliku wynikowego
+									stream << rpn[c];							// Wczytanie wyrazenia ONP do stream (logi)
+								}
+									
+								log("Uzyskane wyra¿enie ONP: " + stream.str());
 								stream.str(std::string());
 								stream << result;
-								log("Wynik:" + stream.str());
-								log("Czas ->" + time);
+								log("Uzyskany wynik wyra¿enia ONP:" + stream.str());
+								log("Ca³kowity czas przetwarzania wyra¿enia: " + t);
 							} catch(const std::runtime_error& e) {
 								log("=================ERROR===================");
 								log(e.what());
@@ -516,10 +518,15 @@ namespace JAONPPROJECT {
 						}
 						else log("Nie mo¿na otworzyæ pliku:" + entry.path().string());
 					}
+					log("=================END===================");
+					stream.str(std::string());
+					stream << time;												// Wczytanie calkowitego czasu do streamu
+					log("Ca³kowity czas przetwarzania plików wyniós³: " + stream.str());
+					delete rpn;													// Zwolnienie zaalokowanej pamieci
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
-				FreeLibrary(hDll);
-				hDll = NULL;
+				FreeLibrary(hDll);												// Zwolnienie biblioteki
+				hDll = NULL;													// Ustawienie uchwytu biblioteki na NULL
 			}
 			else throw std::runtime_error("Nie uda³o za³adowaæ siê DLL: [hDLL is NULL]");
 		}
@@ -529,9 +536,9 @@ namespace JAONPPROJECT {
 		}
 	}
 
-	/** Start counter function
-	*@param PCFreq: double& return cpu frequency
-	*@return time in cpu ticks: __int64
+	/** Funkcja aktywujaca timer
+	*@param PCFreq: double& return czestotliwosc procesora
+	*@return Zwraca czas tikach procesora: __int64
 	*/
 	__int64 StartCounter(double& PCFreq)
 	{
@@ -543,10 +550,10 @@ namespace JAONPPROJECT {
 		return li.QuadPart;
 	}
 
-	/** Get counter function
-	*@param PCFreq: const double& cpu frequency
-	*@param CounterStart: const __int64& start cpu ticks value
-	*@return time in ms
+	/** Funkcja zwracajaca czas wykonywanego algorytmu.
+	*@param PCFreq: const double& czestotliwosc procesora
+	*@param CounterStart: const __int64& startowy czas w tikach procesora
+	*@return Zwraca czas w sekunach: double
 	*/
 	double GetCounter(const double& PCFreq, const __int64& CounterStart)
 	{
