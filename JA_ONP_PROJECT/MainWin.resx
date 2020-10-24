@@ -117,10 +117,586 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="RadioBtnCpp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="RadioBtnCpp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="RadioBtnCpp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>57, 19</value>
+  </data>
+  <data name="RadioBtnCpp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 20</value>
+  </data>
+  <data name="RadioBtnCpp.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="RadioBtnCpp.Text" xml:space="preserve">
+    <value>C++</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnCpp.Name" xml:space="preserve">
+    <value>RadioBtnCpp</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnCpp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnCpp.Parent" xml:space="preserve">
+    <value>GroupBoxImplementation</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnCpp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="RadioBtnAsm.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="RadioBtnAsm.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="RadioBtnAsm.Location" type="System.Drawing.Point, System.Drawing">
+    <value>121, 19</value>
+  </data>
+  <data name="RadioBtnAsm.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="RadioBtnAsm.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="RadioBtnAsm.Text" xml:space="preserve">
+    <value>ASM</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnAsm.Name" xml:space="preserve">
+    <value>RadioBtnAsm</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnAsm.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnAsm.Parent" xml:space="preserve">
+    <value>GroupBoxImplementation</value>
+  </data>
+  <data name="&gt;&gt;RadioBtnAsm.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="BtnDo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 475</value>
+  </data>
+  <data name="BtnDo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>586, 34</value>
+  </data>
+  <data name="BtnDo.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="BtnDo.Text" xml:space="preserve">
+    <value>Wykonaj</value>
+  </data>
+  <data name="&gt;&gt;BtnDo.Name" xml:space="preserve">
+    <value>BtnDo</value>
+  </data>
+  <data name="&gt;&gt;BtnDo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;BtnDo.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;BtnDo.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <metadata name="menuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="menuStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="menuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>608, 24</value>
+  </data>
+  <data name="menuStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="menuStrip.Text" xml:space="preserve">
+    <value>menuStrip</value>
+  </data>
+  <data name="&gt;&gt;menuStrip.Name" xml:space="preserve">
+    <value>menuStrip</value>
+  </data>
+  <data name="&gt;&gt;menuStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;menuStrip.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="plikToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>86, 20</value>
+  </data>
+  <data name="plikToolStripMenuItem.Text" xml:space="preserve">
+    <value>O programie</value>
+  </data>
+  <data name="LabelThreads.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="LabelThreads.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="LabelThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 26</value>
+  </data>
+  <data name="LabelThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 16</value>
+  </data>
+  <data name="LabelThreads.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="LabelThreads.Text" xml:space="preserve">
+    <value>Określ ilość wątków (1-64):</value>
+  </data>
+  <data name="&gt;&gt;LabelThreads.Name" xml:space="preserve">
+    <value>LabelThreads</value>
+  </data>
+  <data name="&gt;&gt;LabelThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;LabelThreads.Parent" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;LabelThreads.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Name" xml:space="preserve">
+    <value>BtnPath</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Name" xml:space="preserve">
+    <value>LabelPath</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Name" xml:space="preserve">
+    <value>TextBoxPath</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="DataGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 40</value>
+  </data>
+  <data name="DataGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>586, 84</value>
+  </data>
+  <data name="DataGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="DataGroup.Text" xml:space="preserve">
+    <value>Dane źródłowe</value>
+  </data>
+  <data name="&gt;&gt;DataGroup.Name" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;DataGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;DataGroup.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;DataGroup.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="BtnPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>489, 36</value>
+  </data>
+  <data name="BtnPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 36</value>
+  </data>
+  <data name="BtnPath.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="BtnPath.Text" xml:space="preserve">
+    <value>Wybierz</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Name" xml:space="preserve">
+    <value>BtnPath</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;BtnPath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="LabelPath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="LabelPath.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="LabelPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 26</value>
+  </data>
+  <data name="LabelPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>258, 13</value>
+  </data>
+  <data name="LabelPath.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="LabelPath.Text" xml:space="preserve">
+    <value>Podaj scieżkę do katalogu z plikami do przetworzenia</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Name" xml:space="preserve">
+    <value>LabelPath</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;LabelPath.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="TextBoxPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 42</value>
+  </data>
+  <data name="TextBoxPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>471, 20</value>
+  </data>
+  <data name="TextBoxPath.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="TextBoxPath.Text" xml:space="preserve">
+    <value>..\files</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Name" xml:space="preserve">
+    <value>TextBoxPath</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.Parent" xml:space="preserve">
+    <value>DataGroup</value>
+  </data>
+  <data name="&gt;&gt;TextBoxPath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Name" xml:space="preserve">
+    <value>NumericThreads</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Parent" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Name" xml:space="preserve">
+    <value>GroupBoxImplementation</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Parent" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="AdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 225</value>
+  </data>
+  <data name="AdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>586, 102</value>
+  </data>
+  <data name="AdditionalSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="AdditionalSettings.Text" xml:space="preserve">
+    <value>Określenie wymagań</value>
+  </data>
+  <data name="&gt;&gt;AdditionalSettings.Name" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;AdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;AdditionalSettings.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;AdditionalSettings.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="NumericThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>199, 27</value>
+  </data>
+  <data name="NumericThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 20</value>
+  </data>
+  <data name="NumericThreads.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Name" xml:space="preserve">
+    <value>NumericThreads</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.Parent" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;NumericThreads.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="GroupBoxImplementation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 53</value>
+  </data>
+  <data name="GroupBoxImplementation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>249, 43</value>
+  </data>
+  <data name="GroupBoxImplementation.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="GroupBoxImplementation.Text" xml:space="preserve">
+    <value>Jaką implementację algorytmu wybierasz</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Name" xml:space="preserve">
+    <value>GroupBoxImplementation</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.Parent" xml:space="preserve">
+    <value>AdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxImplementation.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Name" xml:space="preserve">
+    <value>TextBoxLogs</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Parent" xml:space="preserve">
+    <value>GroupBoxLogs</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="GroupBoxLogs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 333</value>
+  </data>
+  <data name="GroupBoxLogs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>586, 136</value>
+  </data>
+  <data name="GroupBoxLogs.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="GroupBoxLogs.Text" xml:space="preserve">
+    <value>Logi</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxLogs.Name" xml:space="preserve">
+    <value>GroupBoxLogs</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxLogs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxLogs.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;GroupBoxLogs.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="TextBoxLogs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 20</value>
+  </data>
+  <data name="TextBoxLogs.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="TextBoxLogs.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Both</value>
+  </data>
+  <data name="TextBoxLogs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>572, 110</value>
+  </data>
+  <data name="TextBoxLogs.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Name" xml:space="preserve">
+    <value>TextBoxLogs</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.Parent" xml:space="preserve">
+    <value>GroupBoxLogs</value>
+  </data>
+  <data name="&gt;&gt;TextBoxLogs.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>116, 17</value>
   </metadata>
+  <data name="BtnOutputPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>489, 36</value>
+  </data>
+  <data name="BtnOutputPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 36</value>
+  </data>
+  <data name="BtnOutputPath.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="BtnOutputPath.Text" xml:space="preserve">
+    <value>Wybierz</value>
+  </data>
+  <data name="&gt;&gt;BtnOutputPath.Name" xml:space="preserve">
+    <value>BtnOutputPath</value>
+  </data>
+  <data name="&gt;&gt;BtnOutputPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;BtnOutputPath.Parent" xml:space="preserve">
+    <value>DataOutpuBox</value>
+  </data>
+  <data name="&gt;&gt;BtnOutputPath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 26</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>353, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Podaj scieżkę do katalgu w którym mają zostać utworzone pliki wynikowe</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>DataOutpuBox</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="TextBoxOutputPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 42</value>
+  </data>
+  <data name="TextBoxOutputPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>471, 20</value>
+  </data>
+  <data name="TextBoxOutputPath.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="TextBoxOutputPath.Text" xml:space="preserve">
+    <value>..\result</value>
+  </data>
+  <data name="&gt;&gt;TextBoxOutputPath.Name" xml:space="preserve">
+    <value>TextBoxOutputPath</value>
+  </data>
+  <data name="&gt;&gt;TextBoxOutputPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TextBoxOutputPath.Parent" xml:space="preserve">
+    <value>DataOutpuBox</value>
+  </data>
+  <data name="&gt;&gt;TextBoxOutputPath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="DataOutpuBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 135</value>
+  </data>
+  <data name="DataOutpuBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>586, 84</value>
+  </data>
+  <data name="DataOutpuBox.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="DataOutpuBox.Text" xml:space="preserve">
+    <value>Określenie katalogu wyjściowego</value>
+  </data>
+  <data name="&gt;&gt;DataOutpuBox.Name" xml:space="preserve">
+    <value>DataOutpuBox</value>
+  </data>
+  <data name="&gt;&gt;DataOutpuBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;DataOutpuBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;DataOutpuBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.Locked" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>608, 521</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Kalkulator ONP</value>
+  </data>
+  <data name="&gt;&gt;plikToolStripMenuItem.Name" xml:space="preserve">
+    <value>plikToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;plikToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;folderBrowserDialog.Name" xml:space="preserve">
+    <value>folderBrowserDialog</value>
+  </data>
+  <data name="&gt;&gt;folderBrowserDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FolderBrowserDialog, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>MainWin</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

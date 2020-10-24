@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <thread>
 #include <windows.h>
+#include <stack>
 
 namespace JAONPPROJECT {
 
@@ -17,6 +18,7 @@ namespace JAONPPROJECT {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace System::Threading;
 
 	/// <summary>
 	/// Summary for MainWin
@@ -121,6 +123,7 @@ namespace JAONPPROJECT {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(MainWin::typeid));
 			this->RadioBtnCpp = (gcnew System::Windows::Forms::RadioButton());
 			this->RadioBtnAsm = (gcnew System::Windows::Forms::RadioButton());
 			this->BtnDo = (gcnew System::Windows::Forms::Button());
@@ -152,218 +155,148 @@ namespace JAONPPROJECT {
 			// 
 			// RadioBtnCpp
 			// 
-			this->RadioBtnCpp->AutoSize = true;
+			resources->ApplyResources(this->RadioBtnCpp, L"RadioBtnCpp");
 			this->RadioBtnCpp->Checked = true;
-			this->RadioBtnCpp->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(238)));
-			this->RadioBtnCpp->Location = System::Drawing::Point(57, 19);
 			this->RadioBtnCpp->Name = L"RadioBtnCpp";
-			this->RadioBtnCpp->Size = System::Drawing::Size(49, 20);
-			this->RadioBtnCpp->TabIndex = 2;
 			this->RadioBtnCpp->TabStop = true;
-			this->RadioBtnCpp->Text = L"C++";
 			this->RadioBtnCpp->UseVisualStyleBackColor = true;
 			// 
 			// RadioBtnAsm
 			// 
-			this->RadioBtnAsm->AutoSize = true;
-			this->RadioBtnAsm->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(238)));
-			this->RadioBtnAsm->Location = System::Drawing::Point(121, 19);
+			resources->ApplyResources(this->RadioBtnAsm, L"RadioBtnAsm");
 			this->RadioBtnAsm->Name = L"RadioBtnAsm";
-			this->RadioBtnAsm->Size = System::Drawing::Size(55, 20);
-			this->RadioBtnAsm->TabIndex = 3;
-			this->RadioBtnAsm->Text = L"ASM";
 			this->RadioBtnAsm->UseVisualStyleBackColor = true;
 			// 
 			// BtnDo
 			// 
-			this->BtnDo->Location = System::Drawing::Point(13, 475);
+			resources->ApplyResources(this->BtnDo, L"BtnDo");
 			this->BtnDo->Name = L"BtnDo";
-			this->BtnDo->Size = System::Drawing::Size(586, 34);
-			this->BtnDo->TabIndex = 4;
-			this->BtnDo->Text = L"Wykonaj";
 			this->BtnDo->UseVisualStyleBackColor = true;
 			this->BtnDo->Click += gcnew System::EventHandler(this, &MainWin::BtnDo_Click);
 			// 
 			// menuStrip
 			// 
 			this->menuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->plikToolStripMenuItem });
-			this->menuStrip->Location = System::Drawing::Point(0, 0);
+			resources->ApplyResources(this->menuStrip, L"menuStrip");
 			this->menuStrip->Name = L"menuStrip";
-			this->menuStrip->Size = System::Drawing::Size(608, 24);
-			this->menuStrip->TabIndex = 9;
-			this->menuStrip->Text = L"menuStrip";
 			// 
 			// plikToolStripMenuItem
 			// 
 			this->plikToolStripMenuItem->Name = L"plikToolStripMenuItem";
-			this->plikToolStripMenuItem->Size = System::Drawing::Size(86, 20);
-			this->plikToolStripMenuItem->Text = L"O programie";
+			resources->ApplyResources(this->plikToolStripMenuItem, L"plikToolStripMenuItem");
 			this->plikToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainWin::plikToolStripMenuItem_Click);
 			// 
 			// LabelThreads
 			// 
-			this->LabelThreads->AutoSize = true;
-			this->LabelThreads->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(238)));
-			this->LabelThreads->Location = System::Drawing::Point(9, 26);
+			resources->ApplyResources(this->LabelThreads, L"LabelThreads");
 			this->LabelThreads->Name = L"LabelThreads";
-			this->LabelThreads->Size = System::Drawing::Size(164, 16);
-			this->LabelThreads->TabIndex = 10;
-			this->LabelThreads->Text = L"Okreœl iloœæ w¹tków (1-64):";
 			// 
 			// DataGroup
 			// 
 			this->DataGroup->Controls->Add(this->BtnPath);
 			this->DataGroup->Controls->Add(this->LabelPath);
 			this->DataGroup->Controls->Add(this->TextBoxPath);
-			this->DataGroup->Location = System::Drawing::Point(13, 40);
+			resources->ApplyResources(this->DataGroup, L"DataGroup");
 			this->DataGroup->Name = L"DataGroup";
-			this->DataGroup->Size = System::Drawing::Size(586, 84);
-			this->DataGroup->TabIndex = 14;
 			this->DataGroup->TabStop = false;
-			this->DataGroup->Text = L"Dane Ÿród³owe";
 			// 
 			// BtnPath
 			// 
-			this->BtnPath->Location = System::Drawing::Point(489, 36);
+			resources->ApplyResources(this->BtnPath, L"BtnPath");
 			this->BtnPath->Name = L"BtnPath";
-			this->BtnPath->Size = System::Drawing::Size(78, 36);
-			this->BtnPath->TabIndex = 18;
-			this->BtnPath->Text = L"Wybierz";
 			this->BtnPath->UseVisualStyleBackColor = true;
 			this->BtnPath->Click += gcnew System::EventHandler(this, &MainWin::BtnPath_Click);
 			// 
 			// LabelPath
 			// 
-			this->LabelPath->AutoSize = true;
-			this->LabelPath->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(238)));
-			this->LabelPath->Location = System::Drawing::Point(9, 26);
+			resources->ApplyResources(this->LabelPath, L"LabelPath");
 			this->LabelPath->Name = L"LabelPath";
-			this->LabelPath->Size = System::Drawing::Size(258, 13);
-			this->LabelPath->TabIndex = 14;
-			this->LabelPath->Text = L"Podaj scie¿kê do katalogu z plikami do przetworzenia";
 			// 
 			// TextBoxPath
 			// 
-			this->TextBoxPath->Location = System::Drawing::Point(12, 42);
+			resources->ApplyResources(this->TextBoxPath, L"TextBoxPath");
 			this->TextBoxPath->Name = L"TextBoxPath";
 			this->TextBoxPath->ReadOnly = true;
-			this->TextBoxPath->Size = System::Drawing::Size(471, 20);
-			this->TextBoxPath->TabIndex = 9;
-			this->TextBoxPath->Text = L"..\\files";
 			// 
 			// AdditionalSettings
 			// 
 			this->AdditionalSettings->Controls->Add(this->NumericThreads);
 			this->AdditionalSettings->Controls->Add(this->GroupBoxImplementation);
 			this->AdditionalSettings->Controls->Add(this->LabelThreads);
-			this->AdditionalSettings->Location = System::Drawing::Point(13, 225);
+			resources->ApplyResources(this->AdditionalSettings, L"AdditionalSettings");
 			this->AdditionalSettings->Name = L"AdditionalSettings";
-			this->AdditionalSettings->Size = System::Drawing::Size(586, 102);
-			this->AdditionalSettings->TabIndex = 15;
 			this->AdditionalSettings->TabStop = false;
-			this->AdditionalSettings->Text = L"Okreœlenie wymagañ";
 			// 
 			// NumericThreads
 			// 
-			this->NumericThreads->Location = System::Drawing::Point(199, 27);
+			resources->ApplyResources(this->NumericThreads, L"NumericThreads");
 			this->NumericThreads->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 64, 0, 0, 0 });
 			this->NumericThreads->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			this->NumericThreads->Name = L"NumericThreads";
-			this->NumericThreads->Size = System::Drawing::Size(62, 20);
-			this->NumericThreads->TabIndex = 13;
 			this->NumericThreads->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			// 
 			// GroupBoxImplementation
 			// 
 			this->GroupBoxImplementation->Controls->Add(this->RadioBtnCpp);
 			this->GroupBoxImplementation->Controls->Add(this->RadioBtnAsm);
-			this->GroupBoxImplementation->Location = System::Drawing::Point(12, 53);
+			resources->ApplyResources(this->GroupBoxImplementation, L"GroupBoxImplementation");
 			this->GroupBoxImplementation->Name = L"GroupBoxImplementation";
-			this->GroupBoxImplementation->Size = System::Drawing::Size(249, 43);
-			this->GroupBoxImplementation->TabIndex = 12;
 			this->GroupBoxImplementation->TabStop = false;
-			this->GroupBoxImplementation->Text = L"Jak¹ implementacjê algorytmu wybierasz";
 			// 
 			// GroupBoxLogs
 			// 
 			this->GroupBoxLogs->Controls->Add(this->TextBoxLogs);
-			this->GroupBoxLogs->Location = System::Drawing::Point(13, 333);
+			resources->ApplyResources(this->GroupBoxLogs, L"GroupBoxLogs");
 			this->GroupBoxLogs->Name = L"GroupBoxLogs";
-			this->GroupBoxLogs->Size = System::Drawing::Size(586, 136);
-			this->GroupBoxLogs->TabIndex = 16;
 			this->GroupBoxLogs->TabStop = false;
-			this->GroupBoxLogs->Text = L"Logi";
 			// 
 			// TextBoxLogs
 			// 
-			this->TextBoxLogs->Location = System::Drawing::Point(7, 20);
-			this->TextBoxLogs->Multiline = true;
+			resources->ApplyResources(this->TextBoxLogs, L"TextBoxLogs");
 			this->TextBoxLogs->Name = L"TextBoxLogs";
 			this->TextBoxLogs->ReadOnly = true;
-			this->TextBoxLogs->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->TextBoxLogs->Size = System::Drawing::Size(572, 110);
-			this->TextBoxLogs->TabIndex = 0;
 			// 
 			// DataOutpuBox
 			// 
 			this->DataOutpuBox->Controls->Add(this->BtnOutputPath);
 			this->DataOutpuBox->Controls->Add(this->label1);
 			this->DataOutpuBox->Controls->Add(this->TextBoxOutputPath);
-			this->DataOutpuBox->Location = System::Drawing::Point(13, 135);
+			resources->ApplyResources(this->DataOutpuBox, L"DataOutpuBox");
 			this->DataOutpuBox->Name = L"DataOutpuBox";
-			this->DataOutpuBox->Size = System::Drawing::Size(586, 84);
-			this->DataOutpuBox->TabIndex = 19;
 			this->DataOutpuBox->TabStop = false;
-			this->DataOutpuBox->Text = L"Okreœlenie katalogu wyjœciowego";
 			// 
 			// BtnOutputPath
 			// 
-			this->BtnOutputPath->Location = System::Drawing::Point(489, 36);
+			resources->ApplyResources(this->BtnOutputPath, L"BtnOutputPath");
 			this->BtnOutputPath->Name = L"BtnOutputPath";
-			this->BtnOutputPath->Size = System::Drawing::Size(78, 36);
-			this->BtnOutputPath->TabIndex = 18;
-			this->BtnOutputPath->Text = L"Wybierz";
 			this->BtnOutputPath->UseVisualStyleBackColor = true;
 			this->BtnOutputPath->Click += gcnew System::EventHandler(this, &MainWin::BtnOutputPath_Click);
 			// 
 			// label1
 			// 
-			this->label1->AutoSize = true;
-			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(238)));
-			this->label1->Location = System::Drawing::Point(9, 26);
+			resources->ApplyResources(this->label1, L"label1");
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(353, 13);
-			this->label1->TabIndex = 14;
-			this->label1->Text = L"Podaj scie¿kê do katalgu w którym maj¹ zostaæ utworzone pliki wynikowe";
 			// 
 			// TextBoxOutputPath
 			// 
-			this->TextBoxOutputPath->Location = System::Drawing::Point(12, 42);
+			resources->ApplyResources(this->TextBoxOutputPath, L"TextBoxOutputPath");
 			this->TextBoxOutputPath->Name = L"TextBoxOutputPath";
 			this->TextBoxOutputPath->ReadOnly = true;
-			this->TextBoxOutputPath->Size = System::Drawing::Size(471, 20);
-			this->TextBoxOutputPath->TabIndex = 9;
-			this->TextBoxOutputPath->Text = L"..\\files";
 			// 
 			// MainWin
 			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+			resources->ApplyResources(this, L"$this");
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(608, 521);
 			this->Controls->Add(this->DataOutpuBox);
 			this->Controls->Add(this->GroupBoxLogs);
 			this->Controls->Add(this->AdditionalSettings);
 			this->Controls->Add(this->DataGroup);
 			this->Controls->Add(this->BtnDo);
 			this->Controls->Add(this->menuStrip);
+			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
 			this->MainMenuStrip = this->menuStrip;
+			this->MaximizeBox = false;
 			this->Name = L"MainWin";
-			this->Text = L"Kalkulator ONP";
 			this->menuStrip->ResumeLayout(false);
 			this->menuStrip->PerformLayout();
 			this->DataGroup->ResumeLayout(false);
@@ -402,7 +335,7 @@ namespace JAONPPROJECT {
 		this->TextBoxOutputPath->Text = this->folderBrowserDialog->SelectedPath;
 	}
 
-	private:
+	public:
 		void log(String^ s) {
 			s += "\r\n";
 			this->TextBoxLogs->Text += s;
@@ -438,12 +371,16 @@ namespace JAONPPROJECT {
 			return  msclr::interop::marshal_as<std::string>(buff);
 		}
 
+	public:
 		// Typ CONVERT_TO_RPN potrzebny do wywolania funkcji ConvertToRPN z DLL
-		typedef void (* CONVERT_TO_RPN)(const char*, char*);
+		typedef void (*CONVERT_TO_RPN)(const char*, char*);
 
 		// Typ CALC_RPN potrzebny do wywolania funkcji CalcRPN z DLL
-		typedef double(* CALC_RPN)(const char*);
-			
+		typedef double(*CALC_RPN)(const char*);
+
+		CONVERT_TO_RPN convertToRpnProc;	// Uchwyt dla funkcji ConverToRPN 
+		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
+
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
 		// TODO: validate();
@@ -454,9 +391,7 @@ namespace JAONPPROJECT {
 		log("Iloœæ w¹tków: " + this->NumericThreads->Value.ToString());
 		this->RadioBtnCpp->Checked ? log("Implementacja: C++") : log("Implementacja: ASM");
 
-		HINSTANCE hDll = NULL;				// Uchwyt dla biblioteki
-		CONVERT_TO_RPN convertToRpnProc;	// Uchwyt dla funkcji ConverToRPN 
-		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
+		HINSTANCE hDll = NULL;													// Uchwyt dla biblioteki
 
 		log("=================BIBLIOTEKA=================");
 		log("Próba ³adowania biblioteki DLL, proszê czekaæ ...");
@@ -469,88 +404,73 @@ namespace JAONPPROJECT {
 				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
 				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
 				
-																				// Zaladowanie funkcji bibliotecznych
+																							// Zaladowanie funkcji bibliotecznych
 				convertToRpnProc = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
 				calcRpnProc = (CALC_RPN)GetProcAddress(hDll, "CalcRPN");
+				int numOfThreads = static_cast<int>(this->NumericThreads->Value);			// Ilosc faktycznie uruchomionych watkow
 
 				if (convertToRpnProc != NULL && calcRpnProc != NULL)
 				{
-					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");
-					log("===================PLIKI=====================");
-					log("Rozpoczêcie wczytywania i przetwarzania danych z plików");
-					log("=============================================");
-
-					double time = 0.0;											// Czas przetwarzania plików
-					std::string line;											// Zmienna przechowujaca wyrazenie matematyczne z pliku
-					std::string path = ToCppString(this->TextBoxPath->Text);	// Zmienna przechowujaca sciezke do katalogu
-
-					std::stringstream stream;									//
-					char* rpn = (char*)calloc(256, sizeof(char));				// Alokacja pamieci dla wyrazenia ONP
-
-					// TODO::Watki
-
-					// Petla przetwarzajaca pliki z podanego folderu
-					for (const auto& entry : std::filesystem::directory_iterator(path)) {
-						line = std::string();
-						// Zaladowanie pliku
-						std::ifstream file(entry.path(), std::ios::in);
-						if (file.is_open() && entry.is_regular_file()) {
-							log("======== Otwarto plik: " + entry.path().string() + " ========");
-							std::getline(file, line);							// Wczytanie wyrazenia z pliku
-							// TODO::Sprawdzenie poprawnosci danych
-							//
-
-							try {
-								log("Wczytane wyra¿enie matematyczne: " + line);
-
-								double freq = 0.0;
-								stream.str(std::string());						// Wyczyszczenie streamu
-
-								double result = 0;								// Wyzerowanie wyniku ONP
-								
-								auto counterStart = StartCounter(freq);			// Odpalenie timera
-								(convertToRpnProc)(line.c_str(), rpn);			// Konwersja wyrazenia matemaycznego na ONP
-								result = (calcRpnProc)(rpn);					// Obliczenie wyrazenia ONP
-								auto t = GetCounter(freq, counterStart);		// Zatrzymanie timera i otrzymanie czasu w sekundach
-
-								time += t;										// Zaktualizowanie ogolnego czasu
-
-																				// Stworzenie pliku do zapisu (nadpisuje pliki)
-								std::string ext = this->RadioBtnCpp->Checked ? "_result_CPP" : "_result_ASM";
-								path = ToCppString(this->TextBoxOutputPath->Text) + "\\" + entry.path().filename().string() + ext;
-								std::ofstream fOut(path, std::ios::out);
-								if(fOut.good()) {
-																							// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
-									fOut << "Wyra¿enie wejœciowe: " << line << '\n';
-									fOut << "Uzyskane wyra¿enie ONP: ";
-									for (int c = 0; c < strlen(rpn); c++) {
-										fOut << rpn[c];										// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
-										stream << rpn[c];									// Wczytanie wyrazenia ONP do stream (logi)
-									}
-									fOut << '\n';
-									fOut << "Uzyskany wynik obliczeñ: " << result << "\n";  // Zapis wyniku ONP do pliku wynikowego
-									fOut << "Uzyskany czas: " << t << '\n';					// Zapis czasu przetwarzania do pliku wynikowego
-									log("Plik wynikowy zosta³ utworzony:" + entry.path().filename().string());
-								}
-								else log("Nie uda³o stworzyæ siê plik wynikowego: " + path);
-								log("Uzyskane wyra¿enie ONP: " + stream.str());
-								stream.str(std::string());
-								stream << result;
-								log("Uzyskany wynik wyra¿enia ONP:" + stream.str());
-								log("Ca³kowity czas przetwarzania wyra¿enia: " + t);
-							} catch(const std::runtime_error& e) {
-								log("=================ERROR===================");
-								log(e.what());
-							}
-						}
-						else log("Nie mo¿na otworzyæ pliku:" + entry.path().string());
+					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");							
+					log("=================PLIKI=================");
+					log("Analizowanie plikow w katalogu Ÿród³owym");
+					
+					std::stack<std::string> filesInDir;										// Stos zawierajacy sciezki do plikow	
+					for (const auto& entry : std::filesystem::directory_iterator(ToCppString(this->TextBoxPath->Text))) {
+						if (entry.is_regular_file())  
+							filesInDir.push(entry.path().string());
 					}
-					log("=================END===================");
-					stream.str(std::string());
-					stream << time;												// Wczytanie calkowitego czasu do streamu
-					log("Ca³kowity czas przetwarzania plików wyniós³: " + stream.str());
-					delete rpn;													// Zwolnienie zaalokowanej pamieci
-					log("Pliki wynikowe zosta³y utworzone w folderze: " + this->TextBoxOutputPath->Text);
+
+																							// Sprawdzenie czy ilosc watkow > ilosci plikow
+					if (filesInDir.size() < this->NumericThreads->Value)
+					{
+						log("Iloœæ plików jest mniejsza ni¿ zadeklarowana iloœæ w¹tków");
+						numOfThreads = filesInDir.size();									// Nie zezwalamy na "puste" watki
+						log("Liczba w¹tków zostaje zmniejszona do: " + std::to_string(numOfThreads));
+					}
+								
+					log("Segregacja plików ze wzglêdu na iloœæ w¹tków");
+
+					array<ThreadClass^>^ cf = gcnew array<ThreadClass^>(numOfThreads);		// Tablica obiektow watkowych
+																							// Przyporzadkowanie plikow tak aby kazdy watek mial zblizona ilosc plikow
+					int step = round(filesInDir.size() / numOfThreads);
+					int counter = 0;
+					for (counter = 0; counter < numOfThreads - 1; counter++) {
+						cf[counter] = gcnew ThreadClass(this);
+						for (int j = 0; j < step; j++) {
+							cf[counter]->AddPath(ToDotNetString(filesInDir.top()));
+							filesInDir.pop();
+						}
+					}
+					cf[counter] = gcnew ThreadClass(this);
+					while (filesInDir.size() > 0) {
+						cf[counter]->AddPath(ToDotNetString(filesInDir.top()));
+						filesInDir.pop();
+					}
+
+					log("Tworzenie w¹tków");
+
+					array<Thread^>^ threads = gcnew array<Thread^>(numOfThreads);			// Tablica watkow
+
+					for (int i = 0; i < numOfThreads; i++)
+						threads[i] = gcnew Thread(gcnew ParameterizedThreadStart(&CalculateFiles::CalFile));
+
+					log("Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
+					
+					double freq = 0.0;
+					auto counterStart = StartCounter(freq);						// Odpalenie timera
+
+					for (int i = 0; i < numOfThreads; i++)
+						threads[i]->Start(cf[i]);								// Wystartowanie watkow
+						
+					for (int i = 0; i < numOfThreads; i++)
+						threads[i]->Join();
+
+					auto time = GetCounter(freq, counterStart);					// Zatrzymanie timera i otrzymanie czasu w sekundach
+					
+					log("Zakoñczono przetwarzanie plików w w¹tkach");
+					log(L"Pliki zosta³y utworzone w katalogu: " + this->TextBoxOutputPath->Text);
+					log("Ca³kowity czas przetwarzania plików wyniós³: " + std::to_string(time));
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
 				FreeLibrary(hDll);												// Zwolnienie biblioteki
@@ -590,4 +510,102 @@ namespace JAONPPROJECT {
 		return double(li.QuadPart - CounterStart) / PCFreq;
 	}
 
-}; }
+	/** Klasa zawierjaca obiekt watkowy */
+	ref class ThreadClass {
+	public:
+		MainWin^ mw; // "this" MainWIn
+		// Lista z sciezkami do przetworzenia
+		System::Collections::Generic::List<String^>^ paths = gcnew System::Collections::Generic::List<String^>();
+	public:
+		ThreadClass(MainWin^ _mw) {
+			mw = _mw;
+		}
+		/* Metoda dodaje sciezke do listy
+		* @param String^ p sciezka do pliku
+		*/
+		void AddPath(String^ p) {
+			paths->Add(p);
+		}
+	};
+
+	/** Klasa obslugujaca watek */
+	ref class CalculateFiles {
+	public:
+		/* Metoda wykonujaca obliczenia w watkach
+		* @param Object^ data obiekt watkowy klasy ThreadClass
+		*/
+		static void CalFile(Object^ data)
+		{	
+			ThreadClass^ threadClass = (ThreadClass^)data;							// Zrzutowanie na typ pakujacy dane	
+			double time = 0.0;														// Czas konwersji i obliczen
+			double freq = 0.0;														// Czestotliwosc procesora
+			double result = 0;														// Wynik wyrazenia ONP
+			std::ofstream fOut;
+			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
+			std::string outPath;													// Œcie¿ka do pliku wynikowego
+			std::string fInputline;													// Zm. zawierajaca pobrana linie z pliku
+			std::string fOutnName;													// Zm. zawierjaca nazwe pliku wynikowego
+			std::string ext =														// "Rozszerzenie" pliku wynikowego
+				threadClass->mw->RadioBtnCpp->Checked ? ".rCPP" : ".rASM";
+			int bSlashPosNext;														// Zm. wykorzystywan do zdobycia nazwy pliku z sciezki
+																					// Przetworzenie plikow w petli
+			for each (String ^ %st in threadClass->paths) {
+				result = 0;
+				srcPath = std::string();
+				outPath = std::string();
+				fInputline = std::string();
+				char* rpn = (char*)calloc(256, sizeof(char));							// Alokacja pamieci dla wyrazenia ONP
+
+				srcPath = threadClass->mw->ToCppString(st);
+				bSlashPosNext = srcPath.find_last_of('\\') + 1;
+				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
+				outPath = threadClass->mw->ToCppString(threadClass->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
+
+				std::ifstream file(srcPath, std::ios::in);
+				
+				if (file.is_open()) {
+					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
+
+					// TODO::Sprawdzenie poprawnosci danych
+					//
+
+					freq = 0.0;
+					try {
+						// Wyzerowanie wyniku ONP
+						auto counterStart = threadClass->mw->StartCounter(freq);		// Odpalenie timera
+						(threadClass->mw->convertToRpnProc)(fInputline.c_str(), rpn);	// Konwersja wyrazenia matemaycznego na ONP
+						result = (threadClass->mw->calcRpnProc)(rpn);					// Obliczenie wyrazenia ONP
+						time = threadClass->mw->GetCounter(freq, counterStart);			// Zatrzymanie timera i otrzymanie czasu w sekundach
+					}
+					catch (const std::runtime_error& e) {
+						std::ofstream fOut(outPath, std::ios::out);
+						if (fOut.is_open()) {
+							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
+							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
+							continue;
+						}
+
+					}
+
+					std::ofstream fOut(outPath, std::ios::out);							// Stworzenie pliku do zapisu
+					if (fOut.good()) {
+						// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
+						fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
+						fOut << "Uzyskane wyra¿enie ONP: ";
+						for (int c = 0; c < strlen(rpn); c++) {							// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
+							fOut << rpn[c];
+						}
+						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";		// Zapis wyniku ONP do pliku wynikowego
+						fOut << "Uzyskany czas: " << time << '\n';						// Zapis czasu przetwarzania do pliku wynikowego
+					} // if fOut.good()
+				}
+				else {
+					String^ msg = L"Nie uda³o otworzyæ siê pliku: " + st;
+					MessageBox::Show(msg);
+				}
+				delete rpn;
+			} // for each (String ^ %st in threadClass->paths)
+		}
+	}; 	
+}; 
+}
