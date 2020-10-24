@@ -38,13 +38,15 @@
 ;
 ; v0.5:
 ; - Dodanie informacji i modyfikowanych flagach i rejestrach
+; 
+; V0.5:
+; - CalcRPN poprawa bledow zwiazanych ze obsluga stosu
 ;
 ;*/
 
 .data
 	DN01 real8 0.1											;deklaracja 0.1
 	DN1 real8 1.0											;deklaracja 1.0
-	TMP_R4 real8 0.0										;zmienna tymczasowa pod REAL8
 
 .const
 	EN48 equ 48												;deklaracja stalej 48
@@ -320,7 +322,9 @@
 		LOCAL currSign: BYTE										;znak wczytywanej liczby
 		LOCAL exponentSize: DWORD									;rozmiar cechy liczby
 
-		push rsi													;kopia RSI
+		push rbp													;kopia rejestru RBP
+		push rsi													;kopia rejestru RSI
+		push rdi													;kopia rejestru RDI
 
 		xor rax, rax												;wyzerowanie RAX
 		mov exponentSize, eax										;EXPONENT_SIZE <- EAX, wyzerowanie rozmiaru cechy liczby
@@ -428,8 +432,9 @@
 				subsd xmm5, xmm1										;XMM5 - XMM1
 				movsd xmm1, xmm5										;XMM1 <- XMM5
 				PositiveNum:										;PositiveNum
-				movupd TMP_R4, xmm1									;TMP_R4 <- XMM1
-				fld TMP_R4											;odlozenie wyniku na stos (TMP_R4)
+																	;odlozenie wyniku na stos
+				sub rsp, 16
+				movdqu XMMWORD PTR [rsp], xmm1
 
 																	;COM::czyszcenie pod nastepna liczbe
 				xor rax, rax										;RAX <- 0
@@ -446,40 +451,44 @@
 			jmp CalcRPN@LOOP										;skok do CalcRPN@LOOP
 
 			CalcRPN@LoadSubOperator:								;CalcRPN@LoadSubOperator
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm4, TMP_R4									;zaladowanie liczby do XMM4
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm5, TMP_R4									;zaladowanie liczby do XMM5
-				subsd xmm5, xmm4									;XMM5 <- XMM% - XMM4
-				movupd TMP_R4, xmm5									;TMP_R4 <- XMM5
-				fld TMP_R4											;wrzucenie na stos TNP_R4
+																	;pobranie ze stosu liczby do XMM4
+				movdqu xmm4, XMMWORD PTR [rsp]						;
+				add rsp, 16											;
+				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
+				add rsp, 16											;
+				subsd xmm5, xmm4									;XMM5 <- XMM5 - XMM4
+				sub rsp, 16											;wrzucenie wyniku na stos
+				movdqu XMMWORD PTR [rsp], xmm5						;
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadAdd:										;CalcRPN@LoadAdd
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm4, TMP_R4									;zaladowanie liczby do XMM4
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm5, TMP_R4									;zaladowanie liczby do XMM5
-				addsd xmm5, xmm4									;XMM5 <- XMM% + XMM4
-				movupd TMP_R4, xmm5									;TMP_R4 <- XMM5
-				fld TMP_R4											;wrzucenie na stos TNP_R4
+																	;pobranie ze stosu liczby do XMM4
+				movdqu xmm4, XMMWORD PTR [rsp]						;
+				add rsp, 16											;
+				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
+				add rsp, 16											;
+				addsd xmm5, xmm4									;XMM5 <- XMM5 + XMM4
+				sub rsp, 16											;wrzucenie wyniku na stos
+				movdqu XMMWORD PTR [rsp], xmm5						;
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadMull:										;CalcRPN@LoadMull
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm4, TMP_R4									;zaladowanie liczby do XMM4
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm5, TMP_R4									;zaladowanie liczby do XMM5
-				mulsd xmm5, xmm4									;XMM5 <- XMM% * XMM4
-				movupd TMP_R4, xmm5									;TMP_R4 <- XMM5
-				fld TMP_R4											;wrzucenie na stos TNP_R4
+																	;pobranie ze stosu liczby do XMM4
+				movdqu xmm4, XMMWORD PTR [rsp]						;
+				add rsp, 16											;
+				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
+				add rsp, 16											;
+				mulsd xmm5, xmm4									;XMM5 <- XMM5 * XMM4
+				sub rsp, 16											;wrzucenie wyniku na stos
+				movdqu XMMWORD PTR [rsp], xmm5						;
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadDiv:										;CalcRPN@LoadDiv
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm4, TMP_R4									;zaladowanie liczby do XMM4
-				fstp TMP_R4											;pobranie ze stosu do TNP_R4
-				movupd xmm5, TMP_R4									;zaladowanie liczby do XMM5
-				divsd xmm5, xmm4									;XMM5 <- XMM% / XMM4
-				movupd TMP_R4, xmm5									;TMP_R4 <- XMM5
-				fld TMP_R4											;wrzucenie na stos TNP_R4
+																	;pobranie ze stosu liczby do XMM4
+				movdqu xmm4, XMMWORD PTR [rsp]						;
+				add rsp, 16											;
+				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
+				add rsp, 16											;
+				divsd xmm5, xmm4									;XMM5 <- XMM5 / XMM4
+				sub rsp, 16											;wrzucenie wyniku na stos
+				movdqu XMMWORD PTR [rsp], xmm5						;
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadSpace:										;CalcRPN@LoadSpace
 
@@ -487,16 +496,23 @@
 
 		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
 
-		fstp TMP_R4													;pobranie koncowego wyniku ze stosu
-		movsd xmm0, TMP_R4											;zwrocenie wyniku
+		movdqu xmm0, XMMWORD PTR [rsp]
+		add rsp, 16
 
-		pop RSI														;przywrocenie RSI
+		pop rdi													;przywrocenie RDI
+		pop rsi													;przywrocenie RSI
+		pop rbp													;przywrocenie RBP
 
-		ret															;return XMM0
+		ret														;return XMM0
 
-		CalcRPN@Err:												;CalcRPN@Err
-		xorpd xmm0, xmm0											;XMM0 <- 0
-		ret															;return RAX
+		CalcRPN@Err:											;CalcRPN@Err
+		xorpd xmm0, xmm0										;XMM0 <- 0
+
+		pop rdi													;przywrocenie RDI
+		pop rsi													;przywrocenie RSI
+		pop rbp													;przywrocenie RBP
+
+		ret														;return RAX
 
 	CalcRPN endp
 
