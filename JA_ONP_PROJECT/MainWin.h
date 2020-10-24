@@ -9,6 +9,7 @@
 #include <thread>
 #include <windows.h>
 #include <stack>
+#include <chrono> 
 
 namespace JAONPPROJECT {
 
@@ -19,6 +20,7 @@ namespace JAONPPROJECT {
 	using namespace System::Data;
 	using namespace System::Drawing;
 	using namespace System::Threading;
+	using namespace std::chrono;
 
 	/// <summary>
 	/// Summary for MainWin
@@ -456,25 +458,25 @@ namespace JAONPPROJECT {
 						threads[i] = gcnew Thread(gcnew ParameterizedThreadStart(&CalculateFiles::CalFile));
 
 					log("Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
-					
-					double freq = 0.0;
-					auto counterStart = StartCounter(freq);						// Odpalenie timera
+						
+					steady_clock::time_point start = GetTimePoint();						// Otrzymanie czasu poczatkowego timera
 
 					for (int i = 0; i < numOfThreads; i++)
-						threads[i]->Start(cf[i]);								// Wystartowanie watkow
+						threads[i]->Start(cf[i]);											// Wystartowanie watkow
 						
 					for (int i = 0; i < numOfThreads; i++)
 						threads[i]->Join();
 
-					auto time = GetCounter(freq, counterStart);					// Zatrzymanie timera i otrzymanie czasu w sekundach
+					steady_clock::time_point stop = GetTimePoint();							// Otrzymanie czasu koncowego timera
+					microseconds duration = GetDuration(stop, start);						// Obiczenie czasu				
 					
 					log("Zakoñczono przetwarzanie plików w w¹tkach");
 					log(L"Pliki zosta³y utworzone w katalogu: " + this->TextBoxOutputPath->Text);
-					log("Ca³kowity czas przetwarzania plików wyniós³: " + std::to_string(time));
+					log("Czas przetwarzania plików [microseconds]: " + std::to_string(duration.count()));
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
-				FreeLibrary(hDll);												// Zwolnienie biblioteki
-				hDll = NULL;													// Ustawienie uchwytu biblioteki na NULL
+				FreeLibrary(hDll);															// Zwolnienie biblioteki
+				hDll = NULL;																// Ustawienie uchwytu biblioteki na NULL
 			}
 			else throw std::runtime_error("Nie uda³o za³adowaæ siê DLL: [hDLL is NULL]");
 		}
@@ -484,30 +486,22 @@ namespace JAONPPROJECT {
 		}
 	}
 
-	/** Funkcja aktywujaca timer
-	*@param PCFreq: double& return czestotliwosc procesora
-	*@return Zwraca czas tikach procesora: __int64
+	/** Funkcja zwracajaca czas
+	*@return Zwraca czas: steady_clock::time_point
 	*/
-	__int64 StartCounter(double& PCFreq)
+	steady_clock::time_point GetTimePoint()
 	{
-		LARGE_INTEGER li;
-		if (!QueryPerformanceFrequency(&li))
-			throw std::runtime_error("QueryPerformanceFrequency failed!\n");
-		PCFreq = double(li.QuadPart) / 1000.0;
-		QueryPerformanceCounter(&li);
-		return li.QuadPart;
+		return high_resolution_clock::now();
 	}
 
-	/** Funkcja zwracajaca czas wykonywanego algorytmu.
-	*@param PCFreq: const double& czestotliwosc procesora
-	*@param CounterStart: const __int64& startowy czas w tikach procesora
-	*@return Zwraca czas w sekunach: double
+	/** Funkcja zwracajaca czas wykonywanego algorytmu w mikrosekundach
+	*@param Stop: const steady_clock::time_point&
+	*@param Start: const steady_clock::time_point&
+	*@return Zwraca czas w mikrosekundach: microseconds
 	*/
-	double GetCounter(const double& PCFreq, const __int64& CounterStart)
+	microseconds GetDuration(const steady_clock::time_point& stop, const steady_clock::time_point& start)
 	{
-		LARGE_INTEGER li;
-		QueryPerformanceCounter(&li);
-		return double(li.QuadPart - CounterStart) / PCFreq;
+		return duration_cast<microseconds>(stop - start);
 	}
 
 	/** Klasa zawierjaca obiekt watkowy */
@@ -537,9 +531,10 @@ namespace JAONPPROJECT {
 		static void CalFile(Object^ data)
 		{	
 			ThreadClass^ threadClass = (ThreadClass^)data;							// Zrzutowanie na typ pakujacy dane	
-			double time = 0.0;														// Czas konwersji i obliczen
-			double freq = 0.0;														// Czestotliwosc procesora
 			double result = 0;														// Wynik wyrazenia ONP
+			steady_clock::time_point start;
+			steady_clock::time_point stop;
+			microseconds duration;
 			std::ofstream fOut;
 			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
 			std::string outPath;													// Œcie¿ka do pliku wynikowego
@@ -569,19 +564,20 @@ namespace JAONPPROJECT {
 					// TODO::Sprawdzenie poprawnosci danych
 					//
 
-					freq = 0.0;
 					try {
 						// Wyzerowanie wyniku ONP
-						auto counterStart = threadClass->mw->StartCounter(freq);		// Odpalenie timera
+						start = threadClass->mw->GetTimePoint();					// Otrzymanie czasu poczatkowego timera
 						(threadClass->mw->convertToRpnProc)(fInputline.c_str(), rpn);	// Konwersja wyrazenia matemaycznego na ONP
 						result = (threadClass->mw->calcRpnProc)(rpn);					// Obliczenie wyrazenia ONP
-						time = threadClass->mw->GetCounter(freq, counterStart);			// Zatrzymanie timera i otrzymanie czasu w sekundach
+						stop = threadClass->mw->GetTimePoint();					// Otrzymanie czasu koncowego timera
+						duration = threadClass->mw->GetDuration(stop, start);		// Obiczenie czasu			
 					}
 					catch (const std::runtime_error& e) {
 						std::ofstream fOut(outPath, std::ios::out);
 						if (fOut.is_open()) {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
+							fOut.close();
 							continue;
 						}
 
@@ -596,8 +592,10 @@ namespace JAONPPROJECT {
 							fOut << rpn[c];
 						}
 						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";		// Zapis wyniku ONP do pliku wynikowego
-						fOut << "Uzyskany czas: " << time << '\n';						// Zapis czasu przetwarzania do pliku wynikowego
+						fOut << "Uzyskany czas [microseconds]: " << duration.count() << '\n';						// Zapis czasu przetwarzania do pliku wynikowego
+						fOut.close();
 					} // if fOut.good()
+					file.close();
 				}
 				else {
 					String^ msg = L"Nie uda³o otworzyæ siê pliku: " + st;

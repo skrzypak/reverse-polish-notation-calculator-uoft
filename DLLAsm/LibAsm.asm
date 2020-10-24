@@ -336,6 +336,7 @@
 
 		CalcRPN@LOOP:												;CalcRPN@LOOP
 			inc rsi													;inkrementacja indeksu tablicy RPN
+			mov bl, byte ptr [rsi]									; ### DEBUG ###
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
 				je CalcRPN@LOOPBreak									;tak, wyjscie z petli
 			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak to cyfra
