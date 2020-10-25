@@ -41,7 +41,7 @@
 ; 
 ; V0.5:
 ; - CalcRPN poprawa bledow zwiazanych ze obsluga stosu
-;
+; - Dodanie makr PushXMM i PopXMM
 ;*/
 
 .data
@@ -58,10 +58,9 @@
 	;Nie sprawdza parametrow wejsciowych
 	;@param RCX: ptr byte pobrany ciag znakow z pliku
 	;@param RDX: ptr byte buffor zapisu wyniku (zadeklarowany przed wywolaniem procedury)
-	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
+	;@warning modyfikowane flagi: PL, ZR, AC, PE, CY
 	;@warning modyfikowane rejestry: RBX, RCX, RDX
 	;@warning wyrazenie nie moze posiadac spacji
-	;@warning::wolne rejestry R8-R15
 	ConvertToRPN proc
 		
 		LOCAL wasNum: byte											;zmienna wykorzystywana do dodawania spacji
@@ -166,18 +165,11 @@
 					xor rbx, rbx								;wyzerowanie RBX
 					pop rbx										;pobiernie operatora z stosu
 					mov popSign, bl								;zapisanie pobranego operatora do POP_SIGN
-																;ASM x86
-					;push rbx									;zwrocenie operator na stos
-																;<!-- ASM x86 ->
-																;ASM x64
 					push rcx									;wrzucenie licznika petli na stos
 					xor rcx, rcx								;RCX <- 0
 					mov cl, bl									;wpisanie do RCX parametru fun. CheckSignPriority
-																;<!-- ASM x64 ->
 					call CheckSignPriority						;sprawdzenie priorytetu operatora na stosie
-																;ASM x64
 					pop rcx										;przywrocenie licznika petli
-																;<!-- ASM x64 ->
 					cmp al, currSignPriority					;porowanie priorytetow operatorow
 						jbe @LP										;pierytet jest mniejszy skok do @LP
 																	;priorytet jest wiekszy	
@@ -286,7 +278,7 @@
 	;Procedura sprawdza priorytet operatora matematycznego
 	;@param CL: byte operator matematyczny
 	;@return zwraca piorytet znaku -> '0', '1', '2'
-	;@warning modyfikowane flagi: OF, CF, SF, ZF, AF i PF.
+	;@warning modyfikowane flagi: ZR, PE.
 	CheckSignPriority proc
 		
 		xor rax, rax							;wyzerowanie RAX
@@ -310,13 +302,26 @@
 
 	CheckSignPriority endp
 
-	;Procedura oblicza wartosc wyrazenia ONP
-	;Nie sprawdza parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
-	;@param RCX: <ptr byte> wyrazenie ONP
-	;@return XMM0: <real8> zwraca wynik wyrazenia ONP, w razie bledu zwraca 0
-	;@warning modyfikowane flagi: <uzupelnic>
+	;Makro wstawiajace wartosc rejestru XMM na stos
+	;@param _XMM: rejestr XMM0-7
+	PushXMM macro _XMM
+		sub rsp, 16
+		movdqu XMMWORD PTR [rsp], _XMM
+	endm
+
+	;Makro pobierajace wartosc rejestru XMM na stos
+	;@param _XMM: rejestr XMM0-7
+	PopXMM macro _XMM
+		movdqu _XMM, XMMWORD PTR [rsp]
+		add rsp, 16	
+	endm
+
+	;Procedura oblicza wartosc wyrazenia ONP, ktore moze skladac sie z cyfr, +, -, *, /, . i spacji
+	;Nie sprawdza poprawnosci parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
+	;@param RCX: <ptr byte> wyrazenie ONP, ktore musi byc zakonczone spacja (liczby ujemne) i znakiem NULL
+	;@return XMM0: <real8> zwraca wynik wyrazenia ONP
+	;@warning modyfikowane flagi: OV, PL, ZR, AC, PE, CY
 	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, XMM0-7
-	;@warning::wolne rejestry R9-R15
 	CalcRPN proc
 
 		LOCAL currSign: BYTE										;znak wczytywanej liczby
@@ -345,17 +350,24 @@
 				je CalcRPN@LOOPBreak									;tak, wyjscie z petli
 			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak to cyfra
 				jae CalcRPN@LoadNum										;tak, skok do CalcRPN@LoadNum
-			cmp byte ptr [rsi], '+'									;nie, sprawdzenie czy pobrany znak to '+'
-				je CalcRPN@LoadAdd										;tak, skok do CalcRPN@LoadAdd
-			cmp byte ptr [rsi], '-'									;nie, sprawdzenie czy pobrany znak to '-'
-				je CalcRPN@LoadSub										;tak, skok do CalcRPN@LoadSub
-			cmp byte ptr [rsi], '*'									;nie, sprawdzenie czy pobrany znak to '*'
-				je CalcRPN@LoadMull										;tak, - skok do CalcRPN@LoadMull
-			cmp byte ptr [rsi], '/'									;nie, sprawdzenie czy pobrany znak to '/'
-				je CalcRPN@LoadDiv										;tak, skok do CalcRPN@LoadDiv
 			cmp byte ptr [rsi], ' '									;sprawdzenie czy pobrany znak to spacja
-				je CalcRPN@LoadSpace									;tak, skok do CalcRPN@LoadSpace
-			jmp CalcRPN@Err
+				je CalcRPN@LOOP											;tak, skok do CalcRPN@LOOP
+			cmp byte ptr [rsi], '-'									;sprawdzenie czy pobrany znak to '-'
+				jne CalcRPN@OperatorNext								;nie, skok do CalcRPN@OperatorNext
+				cmp byte ptr [rsi+1], " "								;sprawdzenie czy wczytano '-' jako operator (czy nastepny znak jest spacja)
+					je CalcRPN@LoadSub										;tak, skok do CalcRPN@LoadSubOperator
+				mov currSign, '-'										;CURR_SIGN = '-'
+				jmp CalcRPN@LOOP										;skok do CalcRPN@LOOP
+			CalcRPN@OperatorNext:									;CalcRPN@OperatorNex
+			cmp byte ptr [rsi], '+'									;sprawdzenie czy pobrany znak to '+'
+				je CalcRPN@LoadAdd										;tak, skok do CalcRPN@LoadAdd
+			cmp byte ptr [rsi], '*'									;sprawdzenie czy pobrany znak to '*'
+				je CalcRPN@LoadMull										;tak, - skok do CalcRPN@LoadMull
+			cmp byte ptr [rsi], '/'									;sprawdzenie czy pobrany znak to '/'
+				je CalcRPN@LoadDiv										;tak, skok do CalcRPN@LoadDiv
+			xorps xmm0, xmm0										;jesli nie to wyzerowanie XMM0 w celu zwrocenia bledu funkcji
+			PushXMM xmm0											;wlozenie wartosci XMM0 na stos
+			jmp CalcRPN@LOOPBreak									;skok do CalcRPN@LOOPBreak
 
 			CalcRPN@LoadNum:
 																	;COMM::wczytanie cechy liczby
@@ -431,10 +443,9 @@
 				xorpd xmm5, xmm5										;XMM5 <- 0
 				subsd xmm5, xmm1										;XMM5 - XMM1
 				movsd xmm1, xmm5										;XMM1 <- XMM5
+				
 				PositiveNum:										;PositiveNum
-																	;odlozenie wyniku na stos
-				sub rsp, 16
-				movdqu XMMWORD PTR [rsp], xmm1
+				PushXMM xmm1										;odlozenie wyniku na stos
 
 																	;COM::czyszcenie pod nastepna liczbe
 				xor rax, rax										;RAX <- 0
@@ -445,74 +456,40 @@
 			jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
 
 			CalcRPN@LoadSub:										;CalcRPN@LoadSub
-			cmp byte ptr [rsi+1], " "								;sprawdzenie czy wczytano '-' jako operator
-				je CalcRPN@LoadSubOperator								;tak, skok do CalcRPN@LoadSubOperator
-			mov currSign, '-'										;nie, CURR_SIGN = '-'
-			jmp CalcRPN@LOOP										;skok do CalcRPN@LOOP
-
-			CalcRPN@LoadSubOperator:								;CalcRPN@LoadSubOperator
-																	;pobranie ze stosu liczby do XMM4
-				movdqu xmm4, XMMWORD PTR [rsp]						;
-				add rsp, 16											;
-				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
-				add rsp, 16											;
+				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
+				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				subsd xmm5, xmm4									;XMM5 <- XMM5 - XMM4
-				sub rsp, 16											;wrzucenie wyniku na stos
-				movdqu XMMWORD PTR [rsp], xmm5						;
+				PushXMM xmm5										;wrzucenie wyniku na stos
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadAdd:										;CalcRPN@LoadAdd
-																	;pobranie ze stosu liczby do XMM4
-				movdqu xmm4, XMMWORD PTR [rsp]						;
-				add rsp, 16											;
-				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
-				add rsp, 16											;
+				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
+				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				addsd xmm5, xmm4									;XMM5 <- XMM5 + XMM4
-				sub rsp, 16											;wrzucenie wyniku na stos
-				movdqu XMMWORD PTR [rsp], xmm5						;
+				PushXMM xmm5										;wrzucenie wyniku na stos
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadMull:										;CalcRPN@LoadMull
-																	;pobranie ze stosu liczby do XMM4
-				movdqu xmm4, XMMWORD PTR [rsp]						;
-				add rsp, 16											;
-				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
-				add rsp, 16											;
+				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
+				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				mulsd xmm5, xmm4									;XMM5 <- XMM5 * XMM4
-				sub rsp, 16											;wrzucenie wyniku na stos
-				movdqu XMMWORD PTR [rsp], xmm5						;
+				PushXMM xmm5										;wrzucenie wyniku na stos
 				jmp CalcRPN@LOOP
 			CalcRPN@LoadDiv:										;CalcRPN@LoadDiv
-																	;pobranie ze stosu liczby do XMM4
-				movdqu xmm4, XMMWORD PTR [rsp]						;
-				add rsp, 16											;
-				movdqu xmm5, XMMWORD PTR [rsp]						;pobranie ze stosu liczby do XMM5
-				add rsp, 16											;
+				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
+				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				divsd xmm5, xmm4									;XMM5 <- XMM5 / XMM4
-				sub rsp, 16											;wrzucenie wyniku na stos
-				movdqu XMMWORD PTR [rsp], xmm5						;
-				jmp CalcRPN@LOOP
-			CalcRPN@LoadSpace:										;CalcRPN@LoadSpace
+				PushXMM xmm5										;wrzucenie wyniku na stos
 
 		jmp CalcRPN@LOOP											;skok do CalcRPN@LOOP - wczytanie nastepnego znaku RPN
 
 		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
 
-		movdqu xmm0, XMMWORD PTR [rsp]
-		add rsp, 16
+		PopXMM xmm0												; pobranie wyniku koncowego ze stosu
 
 		pop rdi													;przywrocenie RDI
 		pop rsi													;przywrocenie RSI
 		pop rbp													;przywrocenie RBP
 
 		ret														;return XMM0
-
-		CalcRPN@Err:											;CalcRPN@Err
-		xorpd xmm0, xmm0										;XMM0 <- 0
-
-		pop rdi													;przywrocenie RDI
-		pop rsi													;przywrocenie RSI
-		pop rbp													;przywrocenie RBP
-
-		ret														;return RAX
 
 	CalcRPN endp
 
