@@ -524,6 +524,93 @@ namespace JAONPPROJECT {
 
 	/** Klasa obslugujaca watek */
 	ref class CalculateFiles {
+	private:
+		/* Metoda sprawdza poprawnosc pobranego wyrazenia
+		* @param pobrany ciag znakow: std::string&
+		* @return komunikat bledu: std::string 
+		* @waring w przypadku braku bledu funkcja zwraca pusty ciag ""
+		* @warning metoda dopisuje zera w przypadku znaleznia liczb ujemnych w wyrazeniu matematycznym
+		* @warning metoda dopisuje brakujaca * przed nawiasem np. 100(3-1) -> 100*(3-1)
+		* @warning metoda usuwa spacje z wyrazenia
+		*/
+		static std::string CheckMathExpressionInput(std::string& exp) {
+			int openBracket = 0;
+			int closeBracket = 0;
+			// Usuwanie spacji
+			for (int i = 0; i < exp.size(); i++) {
+				if (exp[i] == ' ') {
+					exp.erase(i, 1);
+					i--;
+				}
+			}
+																		// Pierwszy znak albo cyfra albo minus
+			if (exp[0] != '-' && (exp[0] < '0' || exp[0] > '9'))
+				return "Niedozwolny znak na pozycji 1";
+			// Sprawdzenie poprawnosci znakow
+			for (int i = 1; i < exp.size(); i++) {
+				if (exp[i] >= '0' && exp[i] <= '9') continue;			// Pobranie cyfry - nastpeny obieg petli
+				switch (exp[i]) {
+				case '(':
+					openBracket++;
+																		// Nie zezwalamy na ()
+					if (exp[i + 1] == ')') 
+						return "() jest niedopuszczalne: " + std::to_string(i + 1);				
+					break;
+				case ')':
+					closeBracket++;
+					if (openBracket < closeBracket)						// Sprawdzenie kolejnosci nawiasow
+						return "Nieporawna kolejnoœæ nawiasów na pozycji: " + std::to_string(i + 1);
+					break;
+				case '.':
+					// Sprawdzenie czy miedzy seperatorem sa cyfry
+					if (i == 0 || i == exp.size() - 1)
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					if (exp[i - 1] < '0' || exp[i - 1] > '9')
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					if (exp[i + 1] < '0' || exp[i + 1] > '9')
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					break;
+				case '/':
+					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					if (exp[i+1] == '0')								// Nie wolno dzielic przez 0
+						return "Nie wolno dzielic przez 0: " + std::to_string(i+2);
+				case '+':
+				case '-':
+				case '*':
+					// Sprawdzenie czy nie wystepuja dwa operatory kolo siebie
+					if (exp[i - 1] == '+' || exp[i - 1] == '-' || exp[i - 1] == '*' || exp[i - 1] == '/')
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					if (exp[i + 1] == '+' || exp[i + 1] == '-' || exp[i + 1] == '*' || exp[i + 1] == '/')
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
+						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+					break;
+				default: 												// Pobranie niewiadomego znaku == false
+					return "Niedozwolony znak na pozycji: " + std::to_string(i + 1);
+				}
+			}
+			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
+				return "Niepoprawna liczba nawiasów otwierj¹cych i zamykaj¹cych: ";
+
+			//Uzpelnienie wyrazenia zerami (liczby ujemne) i *
+			if (exp[0] == '-') exp.insert(exp.begin(), '0');
+			for (int i = 0; i < exp.size(); i++) {
+				if (exp[i] == '(') {
+					if (exp[i + 1] == '-') {
+						exp.insert(exp.begin() + i + 1, '0');
+						i++;											// TODO i =+= 2
+					}
+					if (exp[i - 1] >= '0' && exp[i - 1] <= '9')
+					{
+						exp.insert(exp.begin() + i, '*');
+						i++;											// TODO i =+= 2
+					}
+				}
+			}
+			return "";
+		}
+
 	public:
 		/* Metoda wykonujaca obliczenia w watkach
 		* @param Object^ data obiekt watkowy klasy ThreadClass
@@ -561,8 +648,18 @@ namespace JAONPPROJECT {
 				if (file.is_open()) {
 					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
 
-					// TODO::Sprawdzenie poprawnosci danych
-					//
+																						//Sprawdzenie poprawnosci i uzupelnienie danych
+					std::string com = CheckMathExpressionInput(fInputline);
+					if (com != "") {
+						std::ofstream fOut(outPath, std::ios::out);
+						if (fOut.is_open()) {
+							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
+							fOut << com;
+							fOut.close();
+						}
+						continue;
+					}
+
 
 					try {
 						// Wyzerowanie wyniku ONP
