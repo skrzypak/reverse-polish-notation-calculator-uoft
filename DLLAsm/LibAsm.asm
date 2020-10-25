@@ -39,9 +39,15 @@
 ; v0.5:
 ; - Dodanie informacji i modyfikowanych flagach i rejestrach
 ; 
-; V0.5:
+; v0.5:
 ; - CalcRPN poprawa bledow zwiazanych ze obsluga stosu
 ; - Dodanie makr PushXMM i PopXMM
+;
+; v0.51:
+; - ConvertToRPN - naprawnie bledu zwiazanego z priorytetem operatorow
+; 
+;
+;
 ;*/
 
 .data
@@ -171,8 +177,8 @@
 					call CheckSignPriority						;sprawdzenie priorytetu operatora na stosie
 					pop rcx										;przywrocenie licznika petli
 					cmp al, currSignPriority					;porowanie priorytetow operatorow
-						jbe @LP										;pierytet jest mniejszy skok do @LP
-																	;priorytet jest wiekszy	
+						jb @LP										;obecny pierytet jest wiekszy niz ten na stosie skok do @LP
+																	;priorytet jest mniejszy lub rowny
 																	;
 						mov [rdi], rbx								;RESULT <- EBX (ostatni pobrany operator)
 						inc rdi										;inkrementacja indeksu RESULT

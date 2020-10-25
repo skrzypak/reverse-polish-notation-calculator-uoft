@@ -57,7 +57,7 @@ void __cdecl ConvertToRPN(const char* data, char* result)
                 priority = checkSignPriority(data[i]);
                 while (s.size())
                 {
-                    if (priority < checkSignPriority(s.top())) {
+                    if (priority <= checkSignPriority(s.top())) {
                         result[c++] = s.top();
                         result[c++] = ' ';
                         s.pop();

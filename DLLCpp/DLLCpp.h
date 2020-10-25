@@ -30,6 +30,9 @@
 * v0.4:
 * - Poprawa znalezionych bledow (bledna konwersja liczb ujemnych, wychodzenie poza zakres lanucha znakow)
 * - Ujednolicenie jezyka komentarzy
+* 
+* v0.5
+* - ConvertToRPN - naprawnie bledu zwiazanego z priorytetem operatorow
 */
 
 #pragma once

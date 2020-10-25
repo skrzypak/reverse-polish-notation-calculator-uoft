@@ -578,9 +578,8 @@ namespace JAONPPROJECT {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
 							fOut.close();
-							continue;
 						}
-
+						continue;
 					}
 
 					std::ofstream fOut(outPath, std::ios::out);							// Stworzenie pliku do zapisu
