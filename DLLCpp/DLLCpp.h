@@ -31,8 +31,12 @@
 * - Poprawa znalezionych bledow (bledna konwersja liczb ujemnych, wychodzenie poza zakres lanucha znakow)
 * - Ujednolicenie jezyka komentarzy
 * 
-* v0.5
+* v0.5:
 * - ConvertToRPN - naprawnie bledu zwiazanego z priorytetem operatorow
+* 
+* v0.6:
+* - ConvertToRPN - optymalizacja kodu (usuniecie zmiennej wasNum)
+* 
 */
 
 #pragma once

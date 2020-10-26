@@ -536,6 +536,8 @@ namespace JAONPPROJECT {
 		static std::string CheckMathExpressionInput(std::string& exp) {
 			int openBracket = 0;
 			int closeBracket = 0;
+			bool seperator = false;
+
 			// Usuwanie spacji
 			for (int i = 0; i < exp.size(); i++) {
 				if (exp[i] == ' ') {
@@ -544,11 +546,24 @@ namespace JAONPPROJECT {
 				}
 			}
 																		// Pierwszy znak albo cyfra albo minus
-			if (exp[0] != '-' && (exp[0] < '0' || exp[0] > '9'))
+			if (exp[0] != '-' && exp[0] != '(' && (exp[0] < '0' || exp[0] > '9'))
 				return "Niedozwolny znak na pozycji 1";
+			if(exp[0] == '(') openBracket++;
+
 			// Sprawdzenie poprawnosci znakow
 			for (int i = 1; i < exp.size(); i++) {
-				if (exp[i] >= '0' && exp[i] <= '9') continue;			// Pobranie cyfry - nastpeny obieg petli
+				if (exp[i] >= '0' && exp[i] <= '9') {					// Sprawdzenie czy liczba ma max. 1 seperator
+					do {
+						if(exp[i] == '.') {
+							if (seperator == true)
+								return "Niedopuszczalny seperator na pozycji: " + std::to_string(i + 1);
+							seperator = true;
+						}
+						i++;
+					} while ((exp[i] >= '0' && exp[i] <= '9') || exp[i] == '.');
+					if (i >= exp.size() - 1) break;
+					seperator = false;
+				}
 				switch (exp[i]) {
 				case '(':
 					openBracket++;
@@ -562,13 +577,7 @@ namespace JAONPPROJECT {
 						return "Nieporawna kolejnoœæ nawiasów na pozycji: " + std::to_string(i + 1);
 					break;
 				case '.':
-					// Sprawdzenie czy miedzy seperatorem sa cyfry
-					if (i == 0 || i == exp.size() - 1)
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
-					if (exp[i - 1] < '0' || exp[i - 1] > '9')
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
-					if (exp[i + 1] < '0' || exp[i + 1] > '9')
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+						return "Niedozwolone sa liczby postaci .123" + std::to_string(i + 1);
 					break;
 				case '/':
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
@@ -601,7 +610,7 @@ namespace JAONPPROJECT {
 						exp.insert(exp.begin() + i + 1, '0');
 						i++;											// TODO i =+= 2
 					}
-					if (exp[i - 1] >= '0' && exp[i - 1] <= '9')
+					if (i != 0 && (exp[i-1] == ')' || (exp[i - 1] >= '0' && exp[i - 1] <= '9')))
 					{
 						exp.insert(exp.begin() + i, '*');
 						i++;											// TODO i =+= 2
@@ -636,7 +645,7 @@ namespace JAONPPROJECT {
 				srcPath = std::string();
 				outPath = std::string();
 				fInputline = std::string();
-				char* rpn = (char*)calloc(256, sizeof(char));							// Alokacja pamieci dla wyrazenia ONP
+				char* rpn = (char*)calloc(2048, sizeof(char));							// Alokacja pamieci dla wyrazenia ONP
 
 				srcPath = threadClass->mw->ToCppString(st);
 				bSlashPosNext = srcPath.find_last_of('\\') + 1;

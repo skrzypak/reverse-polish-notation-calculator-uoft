@@ -20,67 +20,55 @@ inline BYTE checkSignPriority(const char& sign)
 
 void __cdecl ConvertToRPN(const char* data, char* result)
 {
-    int i = 0;                                          // Licznik petli i indeks const char* data
     int c = 0;                                          // Indeks zmiennej char* result
     BYTE priority;                                      // Zmienna przechowujaca uzyskany priorytet znaku
-    bool wasNum = false;                                // Zmienna wykorzystywana w celu korekcji ilosci spacji
     std::stack<char> s;                                 // Stos do przechowywania operatorow
-                                                        
                                                         // Sprawdzenie czy pierwszy znak jest minusem (liczba ujeman)
-    if (*data == '-') {
-        result[c++] = '-';
-        wasNum = true;
-        i++;
-    }
-
-    for(i; i < strlen(data); i++)
+    while(*data != '\0')
     {
         // Sprawdzenie czy wczytana zostala liczba czy operator
-        if ((data[i] >= '0' && data[i] <= '9') || data[i] == '.') {
-            result[c++] = data[i];
-            wasNum = true;
+        if ((*data >= '0' && *data <= '9') || *data == '.') {
+            do {
+                *result = *data;
+                result++;
+                data++;
+            } while ((*data >= '0' && *data <= '9') || *data == '.');
+            if (*data == '\0') goto END;
+            *result = ' ';
+            result++;
         }
-        else {
-
-            // Sprawdzenie czy byla wczesniej wczytywana liczba, jesli tak to dodanie spacji do rezultatu
-            if (wasNum) {
-                result[c++] = ' ';
-                wasNum = false;
-            }
-
-            switch (data[i]) {
+        {
+            switch (*data) {
             case '+': 
             case '-':
             case '*':
             case '/':
                 // Wykonanie czynnosci zwiazanych z operatorami matemtaycznymi (alg. konwersji)
-                priority = checkSignPriority(data[i]);
+                priority = checkSignPriority(*data);
                 while (s.size())
                 {
                     if (priority <= checkSignPriority(s.top())) {
-                        result[c++] = s.top();
-                        result[c++] = ' ';
+                        *result = s.top();
+                        result++;
+                        *result = ' ';
+                        result++;
                         s.pop();
                     }
                     else break;
                 }
-                s.push(data[i]);
+                s.push(*data);
                 break;
             case '(':
                 // Wykonanie czynnosci zwiazanych z znakiem otwierajacym nawias
-                s.push(data[i]);
-                if (data[++i] == '-') {
-                    result[c++] = '-';
-                    wasNum = true;
-                    break;
-                }
-                i--;
+                s.push(*data);
                 break;
             case ')':
                 // Wykonanie czynnosci zwiazanych z znakiem zamykajacym nawias
                 while(s.top() != '(') {
-                    result[c++] = s.top();
-                    result[c++] = ' ';
+                    *result = s.top();
+                    result++;
+                    *result = ' ';
+                    result++;
                     s.pop();
                 };
                 s.pop();
@@ -91,18 +79,22 @@ void __cdecl ConvertToRPN(const char* data, char* result)
                 throw std::invalid_argument("Niepoprawne wyra¿enie matematyczne");
             }
         }
+        data++;
     }
-
+    END:
     // Wypisanie do wyniku pozostalych operatorow na stosie (algortym konwersji)
-    result[c++] = ' ';
+    *result = ' ';
+    result++;
     while (s.size() > 0) {
-        result[c++] = s.top();
-        result[c++] = ' ';
+        *result = s.top();
+        result++;
+        *result = ' ';
+        result++;
         s.pop();
     }
 
     // Dodanie znaku NULL do resultatu
-    result[c] = '\0';
+    *result = '\0';
 }
 
 double __cdecl CalcRPN(const char* rpn) noexcept
