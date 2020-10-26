@@ -561,7 +561,7 @@ namespace JAONPPROJECT {
 						}
 						i++;
 					} while ((exp[i] >= '0' && exp[i] <= '9') || exp[i] == '.');
-					if (i >= exp.size() - 1) break;
+					if (i > exp.size() - 1 || exp[i] == 0) break;
 					seperator = false;
 				}
 				switch (exp[i]) {
@@ -600,9 +600,10 @@ namespace JAONPPROJECT {
 				}
 			}
 			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
-				return "Niepoprawna liczba nawiasów otwierj¹cych i zamykaj¹cych: ";
+				return "Niepoprawna liczba nawiasów otwierj¹cych i zamykaj¹cych";
 
 			//Uzpelnienie wyrazenia zerami (liczby ujemne) i *
+			/*
 			if (exp[0] == '-') exp.insert(exp.begin(), '0');
 			for (int i = 0; i < exp.size(); i++) {
 				if (exp[i] == '(') {
@@ -617,6 +618,7 @@ namespace JAONPPROJECT {
 					}
 				}
 			}
+			*/
 			return "";
 		}
 

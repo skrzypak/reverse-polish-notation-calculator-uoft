@@ -37,6 +37,10 @@
 * v0.6:
 * - ConvertToRPN - optymalizacja kodu (usuniecie zmiennej wasNum)
 * 
+* v0.7:
+* - ConvertToRPN - dodanie wsparcia dla brakujacych znakow * przed nawiasami
+* - ConvertToRPN - naprawienie bledow zwiazanych z obsluga liczb ujemnych
+* 
 */
 
 #pragma once
@@ -54,7 +58,7 @@
 #include <sstream>
 
 /* Funkcja konwertuje wyrazenie matematyczne na odwrotna notacje polska. 
-* Wyrazenie nie moze posiadac spacji (w przypadku liczb ujemnych)
+* Wyrazenie nie moze posiadac spacji. Musi byc zakonczone znakiem NULL
 * Funkcja nie sprawdza poprawnosci danych wejsciowych.
 * @param data: char* wyrazenie matematyczne
 * @param result: char* zwraca skonwertowane wyrazenie w notacji ONP

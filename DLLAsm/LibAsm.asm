@@ -49,6 +49,11 @@
 ; v0.6:
 ; - ConvertToRPN - optymalizacja kodu (usuniecie zmiennej wasNum)
 ;
+; v0.7:
+; - ConvertToRPN - dodanie wsparcia dla brakujacych znakow * przed nawiasami
+; - ConvertToRPN - naprawienie bledow zwiazanych z obsluga liczb ujemnych
+;
+;
 ;*/
 
 .data
@@ -62,11 +67,12 @@
 .code
 
 	;Procedura konwertuje pobrane wyrazenie matematyczne na odwrotna notacje polska
-	;Nie sprawdza parametrow wejsciowych
+	;Nie sprawdza parametrow wejsciowych. Musi byc zakonczone znakiem NULL.
+	;Obsluguje liczby ujemne, -(, X(YYY) np. 125(3-5) -> 125*(3-5)
 	;@param RCX: ptr byte pobrany ciag znakow z pliku
 	;@param RDX: ptr byte buffor zapisu wyniku (zadeklarowany przed wywolaniem procedury)
 	;@warning modyfikowane flagi: PL, ZR, AC, PE, CY
-	;@warning modyfikowane rejestry: RBX, RCX, RDX
+	;@warning modyfikowane rejestry: RBX, RCX, RDX, R8, R9, R10
 	;@warning wyrazenie nie moze posiadac spacji
 	ConvertToRPN proc
 		
@@ -74,6 +80,7 @@
 		LOCAL numOperatorStack: DWORD								;zmienna przechowujaca ilosc operatorow wlozonych na stos
 		LOCAL currSign: byte										;zmienna przechowujaca pobrany znak z DATA
 		LOCAL popSign: byte											;zmienna przechowujaca pobrany operator ze stosu
+		
 		push rbp													;kopia rejestru RBP
 		push rsi													;kopia rejestru RSI
 		push rdi													;kopia rejestru RDI
@@ -82,8 +89,37 @@
 		mov rdi, rdx												;wczytanie wskaznika na RESULT (RDX)
 		xor rax, rax												;RAX = 0
 		mov numOperatorStack, eax									;NUM_OPERATOR_STACK = 0
-		dec rsi														;indeks DATA[-1]
 		
+		mov al, byte ptr [rsi]
+		cmp al, '('													;sprawdzenie czy 1 znak to nawias (potrzebne aby nie wyjsc poza zakres)
+			jne @CheckFirstMinus										;jesli nie, skok @CheckFirstMinus
+			push rax												;odlozenie nawiasu na stos
+			inc numOperatorStack									;inkrementacja ilosci elementow na stosie
+		jmp @LoopInput												;skok do @LoopInput
+		@CheckFirstMinus:											;@CheckFirstMinus
+		cmp	al, '-'													;sprawdzenie czy 1 znak to minus
+			jne @ReadyToLoop											;jesli nie, skok @ReadyToLoop
+		mov [rdi], al												;RDI << '-'
+		inc rdi														;RDI++
+		inc rsi														;RSI++, przytowanie do pobrania nastepnego znaku
+		mov al, [rsi]												;AL <- zaladowanie kolejenego znaku z zrodla
+		cmp al, '('												;sprawdzenie czy wystepuje sytuacja -(
+			jne @ReadyToLoop										;jesli nie, skok do @ReadyToLoop
+		mov al, '1'												;zaladowanie 1 do AL
+		mov [rdi], al											;RDI << 1
+		inc rdi													;RDI++, przejscie do nastepnego wolnego miejsca
+		mov al, ' '												;ladujemy spacje do AL
+		mov [rdi], al											;RDI << ' '
+		inc rdi													;RDI++, przejscie do nastepnego wolnego miejsca
+		push '*'												;wlozenie * na stos
+		push '('												;wlozenie ( na stos
+		inc numOperatorStack									;inkrementacja NUM_OPERATOR_STACK
+		inc numOperatorStack									;inkrementacja NUM_OPERATOR_STACK
+		inc rsi													;RSI++, zaladowanie nastepnego znaku na wejscie
+
+		@ReadyToLoop:												;@FirstNotMinus
+		dec rsi														;indeks DATA[-1]
+
 		@LoopInput:													;@LoopInput
 			inc rsi													;inkrementacja RSI - nastepny znak
 			mov rax, [rsi]											;wczytanie znaku do akumulatora (AL -> znak)
@@ -91,15 +127,10 @@
 			cmp al, 0												;sprawdzenie czy wczytano znak '\0'
 				je @LoopBreak											;tak, wyjscie z petli
 			cmp al, '0'												;sprawdzenie czy pobrany znak >= '0' (czy pobrano cyfre)
-				je @LoadNum												;znak == '0' - skok do @LoadNum
 				jb @FalseLoadNum										;znak < '0' czyli wczytano inny znak - skok do @FalseLoadNum
 			cmp al, '9'												;tak, znak >= '0' - sprawdzenie czy znak <= '9'								
 				jbe @LoadNum											;tak, wczytano cyfre - skok do @LoadNum
-				ja @Err													;nie, wczytano inny znak - skok do @Err
-			
 			@FalseLoadNum:											;@FalseLoadNum
-			cmp al, ' '												;sprawdzenie czy pobrany znak to spacja (nie powinno ich byc)
-				je @LoadSpace											;tak, skok do @LoadSpace
 			cmp al, '+'												;nie, sprawdzenie czy pobrany znak to '+'
 				je @LoadAdd												;tak, skok do @LoadAdd
 			cmp al, '-'												;nie, sprawdzenie czy pobrany znak to '-'
@@ -112,9 +143,7 @@
 				je @LoadOpeningParenthesis								;tak, skok do @LoadOpeningParenthesis
 			cmp al, ')'												;nie, sprawdzenie czy pobrany znak to ')'
 				je @LoadClosedParenthesis								;tak, skok do @LoadClosedParenthesis
-			
-			@LoadSpace:												;@LoadSpace
-			jmp @LoopInput											;skok do @LoopInput - pobranie nastepnego znaku
+			jmp @Err												;skok do @Err
 			
 			@LoadNum:												;@LoadNum
 			mov [rdi], rax											;RDI <- dodanie cyfry do wyniku
@@ -129,7 +158,7 @@
 				je @LoadNum												;wczytano 0 -> skok do @LoadNum
 				jb @LoadNumBreak										;< '0', nie wczytano cyfry - skok do @LoadNumBreak
 			cmp al, '9'												;upewnienie sie czy cyfra jest <= '9'								
-				jbe @LoadNum											;tak, wczytano cyfre - skok do @LoadNum
+			jbe @LoadNum											;tak, wczytano cyfre - skok do @LoadNum
 			
 			@LoadNumBreak:										;@LoadNumBreak	
 			dec rsi												;dekrementacja RSI, (nowy obieg petli od razu go inkrementuje)
@@ -139,6 +168,34 @@
 			jmp @LoopInput										;pobranie nastepnego znaku -> skok do @LoopInput
 
 			@LoadSub:											;@LoadSub
+			xor r10, r10										;wyzerowanie r10 poniewaz bedziemy korzystac ino z r10b
+			mov r8, rsi											;wczytanie do r8 RSI, aby nie zepsuc wskaznika
+			mov r9, rsi											;identycznie dla r9 <- RSI
+			dec r8												;zmniejszamy r8 aby otrzymac poprzedni znak
+			inc r9												;zwiekszamy r9 aby otrzymac nastepny znak
+			mov r10, [r8]										;wczytujemy wartosc znaku spod r8 do r10
+			cmp r10b, '('										;sprawdzenie czy wystepuje sytuacja -(
+				jne @LoadSubOperator								;jesli nie, skok do @LoadSubOperator
+			mov [rdi], al										;RDI << '-'
+			inc rdi												;RDI++, przejscie do nastepnego wolnego miejsca
+			mov r10, [r9]										;wczytanie znaku spod r9 do r10
+			cmp r10b, '('										;sprawdzenie czy wystapila sytuacja (-(
+				jne @LoopInput										;jesli nie, skok do @LoopInput
+																;jesli tak, to mamy sytuacje (-(
+			mov al, '1'											;wczytanie do AL 1
+			mov [rdi], al										;wyprowadzenie 1 do wyniku RDI << 1
+			inc rdi												;inkrementacja RDI
+			mov al, ' '											;zaladowanie do AL spacji
+			mov [rdi], al										;RDI << AL
+			inc rdi												;RDI++, ustawienie RDI na wolny bajt
+			push '*'											;wlozenie * na stos
+			push '('											;wlozenie ( na stos
+			inc numOperatorStack								;inkrementacja NUM_OPERATOR_STACK
+			inc numOperatorStack								;inkrementacja NUM_OPERATOR_STACK
+			inc rsi												;RSI++, przejscie do nastepnego znaku aby ominac (
+			jmp @LoopInput										;skok do @LoopInput
+
+			@LoadSubOperator:									;@LoadSubOperator:
 			@LoadAdd:											;@LoadAdd
 			mov currSignPriority, '1'							;ustawienie priorytetu '1' do CURR_SIGN_PRIORITY
 			jmp @CheckStackPriority								;skok do @CheckStackPriority
@@ -187,6 +244,25 @@
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadOpeningParenthesis:							;@LoadOpeningParenthesis	
+				xor r9, r9										;wyzerowanie r9
+				mov r8, rsi										;r8 <- RSI aby operowac na kopii
+				dec r8											;dekrementacja r8 w celu pozyskania poprzedniego znaku
+				mov r9, [r8]									;wczytaniu do r9 znaku spod adresu r8
+				cmp r9b, ')'									;porowanie czy poprzedni znak to (
+					jne @LOP@CheckBeforeNum							;jesli nie, skok do @LOP@CheckBeforeNum	
+				push '*'										;jesli tak, to mamy ")(" - wlozenie na stos * 
+				inc numOperatorStack							;inkrementacja ilosci elementow na stosie
+				jmp @LOP@PushOpeningBracket						;skok do LOP@PushOpeningBracket
+				
+				@LOP@CheckBeforeNum:							;@LOP@CheckBeforeNum
+				cmp r9b, '0'									;sprawdzenie czy znak < '0;
+					jb @LOP@PushOpeningBracket						;jesli tak, skok do @LOP@PushOpeningBracket
+				cmp r9b, '9'									;sprawdzenie czy znak > '9'								
+					ja @LOP@PushOpeningBracket						;tak, skok do @LOP@PushOpeningBracket
+				push '*'										;nie, mamy sytuacje typu X(YYY), wlozenie * na stos
+				inc numOperatorStack							;inkrementacja ilosci elementow na stosie
+
+				@LOP@PushOpeningBracket:						;@LOP@PushOpeningBracket
 				push rax										;dodanie znaku ( na stos
 				inc numOperatorStack							;inkrementacja NUM_OPERATOR_STACK
 				jmp @LoopInput									;skok do @LoopInput
@@ -441,19 +517,19 @@
 				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				subsd xmm5, xmm4									;XMM5 <- XMM5 - XMM4
 				PushXMM xmm5										;wrzucenie wyniku na stos
-				jmp CalcRPN@LOOP
+				jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
 			CalcRPN@LoadAdd:										;CalcRPN@LoadAdd
 				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
 				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				addsd xmm5, xmm4									;XMM5 <- XMM5 + XMM4
 				PushXMM xmm5										;wrzucenie wyniku na stos
-				jmp CalcRPN@LOOP
+				jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
 			CalcRPN@LoadMull:										;CalcRPN@LoadMull
 				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
 				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5
 				mulsd xmm5, xmm4									;XMM5 <- XMM5 * XMM4
 				PushXMM xmm5										;wrzucenie wyniku na stos
-				jmp CalcRPN@LOOP
+				jmp CalcRPN@LOOP									;skok do CalcRPN@LOOP
 			CalcRPN@LoadDiv:										;CalcRPN@LoadDiv
 				PopXMM	xmm4										;pobranie ze stosu liczby do XMM4
 				PopXMM	xmm5										;pobranie ze stosu liczby do XMM5

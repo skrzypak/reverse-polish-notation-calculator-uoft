@@ -20,10 +20,29 @@ inline BYTE checkSignPriority(const char& sign)
 
 void __cdecl ConvertToRPN(const char* data, char* result)
 {
-    int c = 0;                                          // Indeks zmiennej char* result
     BYTE priority;                                      // Zmienna przechowujaca uzyskany priorytet znaku
     std::stack<char> s;                                 // Stos do przechowywania operatorow
                                                         // Sprawdzenie czy pierwszy znak jest minusem (liczba ujeman)
+    if (*data == '-') {
+        *result = '-';
+        result++;
+        data++;
+        if (*data == '(') {                             // Sprawdzenie czy przypadek "-("
+            *result = '1';                              // Jesli tak to wypsianie do resulta "1 "
+            result++;
+            *result = ' ';
+            result++;
+                                                        // i wrzucenie * nas stos
+            s.push('*');
+            s.push('(');
+            data++;                                     // przejscie do nastepnego znaku w DATA
+        }
+    }
+    else if (*data == '(') {                            // aby w switch nie wyjsc za zakres
+        s.push(*data);
+        data++;
+    }
+
     while(*data != '\0')
     {
         // Sprawdzenie czy wczytana zostala liczba czy operator
@@ -41,6 +60,21 @@ void __cdecl ConvertToRPN(const char* data, char* result)
             switch (*data) {
             case '+': 
             case '-':
+                if (*(data - 1) == '(') {
+                    *result = *data;
+                    result++;
+                    if (*(data+1) == '(') {                             // Sprawdzenie czy przypadek "-("
+                        *result = '1';                              // Jesli tak to wypsianie do resulta "1 "
+                        result++;
+                        *result = ' ';
+                        result++;
+                                                                    // i wrzucenie * nas stos
+                        s.push('*');
+                        s.push('(');
+                        data++;                                     // przejscie do nastepnego znaku w DATA
+                    }
+                    break;
+                }
             case '*':
             case '/':
                 // Wykonanie czynnosci zwiazanych z operatorami matemtaycznymi (alg. konwersji)
@@ -59,6 +93,8 @@ void __cdecl ConvertToRPN(const char* data, char* result)
                 s.push(*data);
                 break;
             case '(':
+                if ((*(data - 1) >= '0' && *(data - 1) <= '9') || *(data - 1) == ')')
+                    s.push('*');
                 // Wykonanie czynnosci zwiazanych z znakiem otwierajacym nawias
                 s.push(*data);
                 break;

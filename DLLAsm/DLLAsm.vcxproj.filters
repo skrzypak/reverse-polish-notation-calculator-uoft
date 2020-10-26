@@ -34,9 +34,6 @@
     <None Include="LibAsm.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\..\Desktop\T (3)">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="LibAsm.asm">
