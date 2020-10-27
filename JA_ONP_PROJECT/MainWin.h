@@ -341,12 +341,16 @@ namespace JAONPPROJECT {
 		void log(String^ s) {
 			s += "\r\n";
 			this->TextBoxLogs->Text += s;
+			this->TextBoxLogs->SelectionStart = this->TextBoxLogs->TextLength;
+			this->TextBoxLogs->ScrollToCaret();
 			return;
 		}
 
 		void log(std::string s) {
 			s += "\r\n";
 			this->TextBoxLogs->Text += ToDotNetString(s);
+			this->TextBoxLogs->SelectionStart = this->TextBoxLogs->TextLength;
+			this->TextBoxLogs->ScrollToCaret();
 			return;
 		}
 
@@ -423,6 +427,8 @@ namespace JAONPPROJECT {
 							filesInDir.push(entry.path().string());
 					}
 
+					if(filesInDir.size() == 0)
+						throw std::runtime_error("Brak plików do przetworzenia...");
 																							// Sprawdzenie czy ilosc watkow > ilosci plikow
 					if (filesInDir.size() < this->NumericThreads->Value)
 					{
@@ -458,6 +464,7 @@ namespace JAONPPROJECT {
 						threads[i] = gcnew Thread(gcnew ParameterizedThreadStart(&CalculateFiles::CalFile));
 
 					log("Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
+					log("Proszê czekaæ ...");
 						
 					steady_clock::time_point start = GetTimePoint();						// Otrzymanie czasu poczatkowego timera
 
@@ -483,6 +490,8 @@ namespace JAONPPROJECT {
 		catch (const std::exception& ex) {
 			log("=================ERROR===================");
 			log(ex.what());
+			FreeLibrary(hDll);																// Zwolnienie biblioteki
+			hDll = NULL;
 		}
 	}
 
@@ -556,7 +565,7 @@ namespace JAONPPROJECT {
 					do {
 						if(exp[i] == '.') {
 							if (seperator == true)
-								return "Niedopuszczalny seperator na pozycji: " + std::to_string(i + 1);
+								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
 							seperator = true;
 						}
 						i++;
@@ -569,34 +578,38 @@ namespace JAONPPROJECT {
 					openBracket++;
 																		// Nie zezwalamy na ()
 					if (exp[i + 1] == ')') 
-						return "() jest niedopuszczalne: " + std::to_string(i + 1);				
+						return "() jest niedopuszczalne na pozycji [bez spacji]:: " + std::to_string(i + 1);				
 					break;
 				case ')':
 					closeBracket++;
 					if (openBracket < closeBracket)						// Sprawdzenie kolejnosci nawiasow
-						return "Nieporawna kolejnoœæ nawiasów na pozycji: " + std::to_string(i + 1);
+						return "Nieporawna kolejnoœæ nawiasów na pozycji [bez spacji]: " + std::to_string(i + 1);
+					if(i+1 < exp.size() && (exp[i+1] >= '0' && exp[i+1] <= '9'))
+						return "Brak operatora matemtycznego na pozycji [bez spacji]: " + std::to_string(i + 2);
 					break;
 				case '.':
-						return "Niedozwolone sa liczby postaci .123" + std::to_string(i + 1);
+						return "Niedozwolone sa liczby postaci .123 na pozycji [bez spacji]: " + std::to_string(i + 1);
 					break;
 				case '/':
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
 					if (exp[i+1] == '0')								// Nie wolno dzielic przez 0
-						return "Nie wolno dzielic przez 0: " + std::to_string(i+2);
+						return "Nie wolno dzielic przez 0 na pozycji [bez spacji]:: " + std::to_string(i+2);
 				case '+':
 				case '-':
 				case '*':
 					// Sprawdzenie czy nie wystepuja dwa operatory kolo siebie
 					if (exp[i - 1] == '+' || exp[i - 1] == '-' || exp[i - 1] == '*' || exp[i - 1] == '/')
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
 					if (exp[i + 1] == '+' || exp[i + 1] == '-' || exp[i + 1] == '*' || exp[i + 1] == '/')
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
-						return "Niedozwolony operator na pozycji: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
+					if(exp[i] == '-' && (exp[i-1] == '(' && exp[i+1] == ')'))
+						return "Niedozwolone jest stosowanie zapisu (-) na pozycji [bez spacji]:: " + std::to_string(i + 1);
 					break;
 				default: 												// Pobranie niewiadomego znaku == false
-					return "Niedozwolony znak na pozycji: " + std::to_string(i + 1);
+					return "Niedozwolony znak na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
 				}
 			}
 			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
@@ -647,8 +660,7 @@ namespace JAONPPROJECT {
 				srcPath = std::string();
 				outPath = std::string();
 				fInputline = std::string();
-				char* rpn = (char*)calloc(2048, sizeof(char));							// Alokacja pamieci dla wyrazenia ONP
-
+				
 				srcPath = threadClass->mw->ToCppString(st);
 				bSlashPosNext = srcPath.find_last_of('\\') + 1;
 				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
@@ -658,6 +670,8 @@ namespace JAONPPROJECT {
 				
 				if (file.is_open()) {
 					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
+					
+					char* rpn = (char*)calloc(fInputline.size()*2.5, sizeof(char));						// Alokacja pamieci dla wyrazenia ONP
 
 																						//Sprawdzenie poprawnosci i uzupelnienie danych
 					std::string com = CheckMathExpressionInput(fInputline);
@@ -667,11 +681,10 @@ namespace JAONPPROJECT {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << com;
 							fOut.close();
+							file.close();
 						}
 						continue;
 					}
-
-
 					try {
 						// Wyzerowanie wyniku ONP
 						start = threadClass->mw->GetTimePoint();					// Otrzymanie czasu poczatkowego timera
@@ -686,8 +699,14 @@ namespace JAONPPROJECT {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
 							fOut.close();
+							file.close();
 						}
 						continue;
+					}
+					catch (...) {
+						String^ msg = L"Wyst¹pi³ niespodziewany b³¹d dla pliku: " + st;
+						MessageBox::Show(msg);
+						file.close();
 					}
 
 					std::ofstream fOut(outPath, std::ios::out);							// Stworzenie pliku do zapisu
@@ -703,12 +722,12 @@ namespace JAONPPROJECT {
 						fOut.close();
 					} // if fOut.good()
 					file.close();
+					delete rpn;
 				}
 				else {
 					String^ msg = L"Nie uda³o otworzyæ siê pliku: " + st;
 					MessageBox::Show(msg);
 				}
-				delete rpn;
 			} // for each (String ^ %st in threadClass->paths)
 		}
 	}; 	
