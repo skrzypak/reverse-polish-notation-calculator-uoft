@@ -543,6 +543,7 @@ namespace JAONPPROJECT {
 		static std::string CheckMathExpressionInput(std::string& exp) {
 			int openBracket = 0;
 			int closeBracket = 0;
+			bool wasNum = false;
 			bool seperator = false;
 
 			// Usuwanie spacji
@@ -560,6 +561,7 @@ namespace JAONPPROJECT {
 			// Sprawdzenie poprawnosci znakow
 			for (int i = 1; i < exp.size(); i++) {
 				if (exp[i] >= '0' && exp[i] <= '9') {					// Sprawdzenie czy liczba ma max. 1 seperator
+					wasNum == true;
 					do {
 						if(exp[i] == '.') {
 							if (seperator == true)
@@ -613,22 +615,10 @@ namespace JAONPPROJECT {
 			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
 				return "Niepoprawna liczba nawiasów otwierj¹cych i zamykaj¹cych";
 
-			/*
-			if (exp[0] == '-') exp.insert(exp.begin(), '0');
-			for (int i = 0; i < exp.size(); i++) {
-				if (exp[i] == '(') {
-					if (exp[i + 1] == '-') {
-						exp.insert(exp.begin() + i + 1, '0');
-						i++;											// TODO i =+= 2
-					}
-					if (i != 0 && (exp[i-1] == ')' || (exp[i - 1] >= '0' && exp[i - 1] <= '9')))
-					{
-						exp.insert(exp.begin() + i, '*');
-						i++;											// TODO i =+= 2
-					}
-				}
+			if (wasNum == false) {
+				return "Hmm... Co mam obliczyæ skoro nie ma ¿adnej cyfry ani liczby";
 			}
-			*/
+
 			return "";
 		}
 
@@ -680,9 +670,7 @@ namespace JAONPPROJECT {
 				if (file.is_open()) {
 					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
 					
-					char* rpn = (char*)calloc(fInputline.size()*2.5, sizeof(char));		// Alokacja pamieci dla wyrazenia ONP
-
-																						//Sprawdzenie poprawnosci i uzupelnienie danych
+					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));		// Alokacja pamieci dla wyrazenia ONP																	//Sprawdzenie poprawnosci i uzupelnienie danych
 					std::string com = CheckMathExpressionInput(fInputline);
 					if (com != "") {
 						fOut = std::ofstream(outPath, std::ios::out);
