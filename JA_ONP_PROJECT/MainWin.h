@@ -554,14 +554,18 @@ namespace JAONPPROJECT {
 				}
 			}
 																		// Pierwszy znak albo cyfra albo minus
-			if (exp[0] != '-' && exp[0] != '(' && (exp[0] < '0' || exp[0] > '9'))
-				return "Niedozwolny znak na pozycji 1";
-			if(exp[0] == '(') openBracket++;
+			if (exp[0] >= '0' && exp[0] <= '9') {
+				wasNum = true;
+			} else {
+				if (exp[0] != '-' && exp[0] != '(' && (exp[0] < '0' || exp[0] > '9'))
+					return "Niedozwolny znak na pozycji 1";
+				if(exp[0] == '(') openBracket++;
+			}
 
 			// Sprawdzenie poprawnosci znakow
 			for (int i = 1; i < exp.size(); i++) {
 				if (exp[i] >= '0' && exp[i] <= '9') {					// Sprawdzenie czy liczba ma max. 1 seperator
-					wasNum == true;
+					wasNum = true;
 					do {
 						if(exp[i] == '.') {
 							if (seperator == true)
