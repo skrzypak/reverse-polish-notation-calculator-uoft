@@ -538,8 +538,6 @@ namespace JAONPPROJECT {
 		* @param pobrany ciag znakow: std::string&
 		* @return komunikat bledu: std::string 
 		* @waring w przypadku braku bledu funkcja zwraca pusty ciag ""
-		* @warning metoda dopisuje zera w przypadku znaleznia liczb ujemnych w wyrazeniu matematycznym
-		* @warning metoda dopisuje brakujaca * przed nawiasem np. 100(3-1) -> 100*(3-1)
 		* @warning metoda usuwa spacje z wyrazenia
 		*/
 		static std::string CheckMathExpressionInput(std::string& exp) {
@@ -578,7 +576,7 @@ namespace JAONPPROJECT {
 					openBracket++;
 																		// Nie zezwalamy na ()
 					if (exp[i + 1] == ')') 
-						return "() jest niedopuszczalne na pozycji [bez spacji]:: " + std::to_string(i + 1);				
+						return "() jest niedopuszczalne na pozycji [bez spacji]: " + std::to_string(i + 1);				
 					break;
 				case ')':
 					closeBracket++;
@@ -592,30 +590,29 @@ namespace JAONPPROJECT {
 					break;
 				case '/':
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
-						return "Niedozwolony operator na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
 					if (exp[i+1] == '0')								// Nie wolno dzielic przez 0
-						return "Nie wolno dzielic przez 0 na pozycji [bez spacji]:: " + std::to_string(i+2);
+						return "Nie wolno dzielic przez 0 na pozycji [bez spacji]: " + std::to_string(i+2);
 				case '+':
 				case '-':
 				case '*':
 					// Sprawdzenie czy nie wystepuja dwa operatory kolo siebie
 					if (exp[i - 1] == '+' || exp[i - 1] == '-' || exp[i - 1] == '*' || exp[i - 1] == '/')
-						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]: " + std::to_string(i + 1);
 					if (exp[i + 1] == '+' || exp[i + 1] == '-' || exp[i + 1] == '*' || exp[i + 1] == '/')
-						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]: " + std::to_string(i + 1);
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
-						return "Niedozwolony operator na pozycji [bez spacji]:: " + std::to_string(i + 1);
+						return "Niedozwolony operator na pozycji [bez spacji]: " + std::to_string(i + 1);
 					if(exp[i] == '-' && (exp[i-1] == '(' && exp[i+1] == ')'))
-						return "Niedozwolone jest stosowanie zapisu (-) na pozycji [bez spacji]:: " + std::to_string(i + 1);
+						return "Niedozwolone jest stosowanie zapisu (-) na pozycji [bez spacji]: " + std::to_string(i + 1);
 					break;
 				default: 												// Pobranie niewiadomego znaku == false
-					return "Niedozwolony znak na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
+					return "Niedozwolony znak na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
 				}
 			}
 			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
 				return "Niepoprawna liczba nawiasów otwierj¹cych i zamykaj¹cych";
 
-			//Uzpelnienie wyrazenia zerami (liczby ujemne) i *
 			/*
 			if (exp[0] == '-') exp.insert(exp.begin(), '0');
 			for (int i = 0; i < exp.size(); i++) {
@@ -646,7 +643,8 @@ namespace JAONPPROJECT {
 			steady_clock::time_point start;
 			steady_clock::time_point stop;
 			microseconds duration;
-			std::ofstream fOut;
+			std::ifstream file;														// Plik wejsciowy
+			std::ofstream fOut;														// Plik wynikowy
 			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
 			std::string outPath;													// Œcie¿ka do pliku wynikowego
 			std::string fInputline;													// Zm. zawierajaca pobrana linie z pliku
@@ -665,18 +663,29 @@ namespace JAONPPROJECT {
 				bSlashPosNext = srcPath.find_last_of('\\') + 1;
 				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
 				outPath = threadClass->mw->ToCppString(threadClass->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
-
-				std::ifstream file(srcPath, std::ios::in);
 				
+				if (std::filesystem::file_size(srcPath) > 1000) {					// Sprawdzenie rozmiaru pliku (MAX. 1kB)
+					fOut = std::ofstream(outPath, std::ios::out);
+					if (fOut.is_open()) {
+						fOut << "Plik [" + threadClass->mw->ToCppString(st) + "] jest za du¿y\n";
+						fOut << "Maksymalny rozmiar pliku to 1KB\n";
+						fOut.close();
+						file.close();
+					}
+					continue;
+				}
+
+				file = std::ifstream(srcPath, std::ios::in);
+
 				if (file.is_open()) {
 					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
 					
-					char* rpn = (char*)calloc(fInputline.size()*2.5, sizeof(char));						// Alokacja pamieci dla wyrazenia ONP
+					char* rpn = (char*)calloc(fInputline.size()*2.5, sizeof(char));		// Alokacja pamieci dla wyrazenia ONP
 
 																						//Sprawdzenie poprawnosci i uzupelnienie danych
 					std::string com = CheckMathExpressionInput(fInputline);
 					if (com != "") {
-						std::ofstream fOut(outPath, std::ios::out);
+						fOut = std::ofstream(outPath, std::ios::out);
 						if (fOut.is_open()) {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << com;
@@ -694,7 +703,7 @@ namespace JAONPPROJECT {
 						duration = threadClass->mw->GetDuration(stop, start);		// Obiczenie czasu			
 					}
 					catch (const std::runtime_error& e) {
-						std::ofstream fOut(outPath, std::ios::out);
+						fOut = std::ofstream(outPath, std::ios::out);
 						if (fOut.is_open()) {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
@@ -709,7 +718,7 @@ namespace JAONPPROJECT {
 						file.close();
 					}
 
-					std::ofstream fOut(outPath, std::ios::out);							// Stworzenie pliku do zapisu
+					fOut = std::ofstream(outPath, std::ios::out);							// Stworzenie pliku do zapisu
 					if (fOut.good()) {
 						// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
 						fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
@@ -717,7 +726,7 @@ namespace JAONPPROJECT {
 						for (int c = 0; c < strlen(rpn); c++) {							// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
 							fOut << rpn[c];
 						}
-						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";		// Zapis wyniku ONP do pliku wynikowego
+						fOut << "\nUzyskany wynik obliczeñ: " << std::setprecision(15) << result << "\n";		// Zapis wyniku ONP do pliku wynikowego
 						fOut << "Uzyskany czas [microseconds]: " << duration.count() << '\n';						// Zapis czasu przetwarzania do pliku wynikowego
 						fOut.close();
 					} // if fOut.good()

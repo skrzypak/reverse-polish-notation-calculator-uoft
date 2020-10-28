@@ -71,6 +71,7 @@
 	;Obsluguje liczby ujemne, -(, X(YYY) np. 125(3-5) -> 125*(3-5)
 	;@param RCX: ptr byte pobrany ciag znakow z pliku
 	;@param RDX: ptr byte buffor zapisu wyniku (zadeklarowany przed wywolaniem procedury)
+	;@return 1 w przypadku braku bledow, 0 w razie napotkania bledu
 	;@warning modyfikowane flagi: PL, ZR, AC, PE, CY
 	;@warning modyfikowane rejestry: RBX, RCX, RDX, R8, R9, R10
 	;@warning wyrazenie nie moze posiadac spacji
@@ -90,7 +91,7 @@
 		xor rax, rax												;RAX = 0
 		mov numOperatorStack, eax									;NUM_OPERATOR_STACK = 0
 		
-		mov al, byte ptr [rsi]
+		mov al, byte ptr [rsi]										;zaladowanie 1 znaku do AL
 		cmp al, '('													;sprawdzenie czy 1 znak to nawias (potrzebne aby nie wyjsc poza zakres)
 			jne @CheckFirstMinus										;jesli nie, skok @CheckFirstMinus
 			push rax												;odlozenie nawiasu na stos
@@ -350,10 +351,10 @@
 			je @LoadPrirorty2						;tak, skok do @LoadPrirorty2
 		mov al, '0'								;ustawienie piorytetu 0 do AL
 		ret										;return RAX (AL)
-		@LoadPrirorty1: 
+		@LoadPrirorty1:							;@LoadPrirorty1
 		mov al, '1'								;ustawienie piorytetu 1 AL
 		ret										;return RAX (AL)
-		@LoadPrirorty2: 
+		@LoadPrirorty2:							;@LoadPrirorty2
 		mov al, '2'								;ustawienie piorytetu 2 AL
 		ret										;return RAX (AL)
 
@@ -376,7 +377,7 @@
 	;Procedura oblicza wartosc wyrazenia ONP, ktore moze skladac sie z cyfr, +, -, *, /, . i spacji
 	;Nie sprawdza poprawnosci parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
 	;@param RCX: <ptr byte> wyrazenie ONP, ktore musi byc zakonczone spacja (liczby ujemne) i znakiem NULL
-	;@return XMM0: <real8> zwraca wynik wyrazenia ONP
+	;@return XMM0: <real8> zwraca wynik wyrazenia ONP. W przypadku bledu zwraca 0
 	;@warning modyfikowane flagi: OV, PL, ZR, AC, PE, CY
 	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, XMM0-7
 	CalcRPN proc
