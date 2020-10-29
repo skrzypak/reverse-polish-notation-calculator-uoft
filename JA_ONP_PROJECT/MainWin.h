@@ -338,26 +338,29 @@ namespace JAONPPROJECT {
 	}
 
 	public:
+		delegate void LogDelegate(String^ text);
+
 		void log(String^ s) {
-			s += "\r\n";
-			this->TextBoxLogs->Text += s;
-			this->TextBoxLogs->SelectionStart = this->TextBoxLogs->TextLength;
-			this->TextBoxLogs->ScrollToCaret();
+			if (this->TextBoxLogs->InvokeRequired)
+			{
+				this->TextBoxLogs->BeginInvoke(gcnew LogDelegate(this, &MainWin::log), s);
+			}
+			else
+			{
+				s += "\r\n";
+				this->TextBoxLogs->Text += s;
+				this->TextBoxLogs->SelectionStart = this->TextBoxLogs->TextLength;
+				this->TextBoxLogs->ScrollToCaret();
+			}
 			return;
 		}
 
-		void log(std::string s) {
-			s += "\r\n";
-			this->TextBoxLogs->Text += ToDotNetString(s);
-			this->TextBoxLogs->SelectionStart = this->TextBoxLogs->TextLength;
-			this->TextBoxLogs->ScrollToCaret();
-			return;
+		void log(std::string text) {
+			log(ToDotNetString(text));
 		}
 
 		void log(double val) {
-			std::ostringstream stream;
-			stream << val;
-			log(stream.str());
+			log(ToDotNetString(std::to_string(val)));
 		}
 
 	private:
@@ -390,25 +393,24 @@ namespace JAONPPROJECT {
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 
 		// TODO: validate();
-
 		this->TextBoxLogs->Text = "";
-		log("================PARAMETRY=================");
+		log(L"================PARAMETRY=================");
 		log("Dane Ÿród³owe: " + this->TextBoxPath->Text);
 		log("Iloœæ w¹tków: " + this->NumericThreads->Value.ToString());
-		this->RadioBtnCpp->Checked ? log("Implementacja: C++") : log("Implementacja: ASM");
+		this->RadioBtnCpp->Checked ? log(L"Implementacja: C++") : log(L"Implementacja: ASM");
 
 		HINSTANCE hDll = NULL;													// Uchwyt dla biblioteki
 
-		log("=================BIBLIOTEKA=================");
-		log("Próba ³adowania biblioteki DLL, proszê czekaæ ...");
+		log(L"=================BIBLIOTEKA=================");
+		log(L"Próba ³adowania biblioteki DLL, proszê czekaæ ...");
 		hDll = this->RadioBtnCpp->Checked ?
 			LoadLibrary(TEXT("DLLCpp")) : LoadLibrary(TEXT("DLLAsm"));
 
 		try {
 			if (hDll != NULL)
 			{
-				log("Uda³o za³adowaæ siê bibliotekê DLL :)");
-				log("Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
+				log(L"Uda³o za³adowaæ siê bibliotekê DLL :)");
+				log(L"Próba ³adowania potrzebnych funkcji biblotecznych, proszê czekaæ ...");
 				
 																							// Zaladowanie funkcji bibliotecznych
 				convertToRpnProc = (CONVERT_TO_RPN)GetProcAddress(hDll, "ConvertToRPN");
@@ -417,54 +419,56 @@ namespace JAONPPROJECT {
 
 				if (convertToRpnProc != NULL && calcRpnProc != NULL)
 				{
-					log("Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");							
-					log("=================PLIKI=================");
-					log("Analizowanie plikow w katalogu Ÿród³owym");
-					
+					log(L"Uda³o za³adowaæ siê wymagane funkcje biblioteczne :)");
+					log(L"=================PLIKI=================");
+					log(L"Analizowanie plikow w katalogu Ÿród³owym");
+
 					std::stack<std::string> filesInDir;										// Stos zawierajacy sciezki do plikow	
 					for (const auto& entry : std::filesystem::directory_iterator(ToCppString(this->TextBoxPath->Text))) {
-						if (entry.is_regular_file())  
+						if (entry.is_regular_file())
 							filesInDir.push(entry.path().string());
 					}
 
-					if(filesInDir.size() == 0)
+					if (filesInDir.size() == 0)
 						throw std::runtime_error("Brak plików do przetworzenia...");
-																							// Sprawdzenie czy ilosc watkow > ilosci plikow
+					// Sprawdzenie czy ilosc watkow > ilosci plikow
 					if (filesInDir.size() < this->NumericThreads->Value)
 					{
-						log("Iloœæ plików jest mniejsza ni¿ zadeklarowana iloœæ w¹tków");
+						log(L"Iloœæ plików jest mniejsza ni¿ zadeklarowana iloœæ w¹tków");
 						numOfThreads = filesInDir.size();									// Nie zezwalamy na "puste" watki
 						log("Liczba w¹tków zostaje zmniejszona do: " + std::to_string(numOfThreads));
 					}
-								
-					log("Segregacja plików ze wzglêdu na iloœæ w¹tków");
+
+					log(L"Segregacja plików ze wzglêdu na iloœæ w¹tków");
 
 					array<ThreadClass^>^ cf = gcnew array<ThreadClass^>(numOfThreads);		// Tablica obiektow watkowych
 																							// Przyporzadkowanie plikow tak aby kazdy watek mial zblizona ilosc plikow
 					int step = round(filesInDir.size() / numOfThreads);
 					int counter = 0;
 					for (counter = 0; counter < numOfThreads - 1; counter++) {
-						cf[counter] = gcnew ThreadClass(this);
+						cf[counter] = gcnew ThreadClass(this, counter + 1);
 						for (int j = 0; j < step; j++) {
 							cf[counter]->AddPath(ToDotNetString(filesInDir.top()));
 							filesInDir.pop();
 						}
 					}
-					cf[counter] = gcnew ThreadClass(this);
+					cf[counter] = gcnew ThreadClass(this, counter + 1);
 					while (filesInDir.size() > 0) {
 						cf[counter]->AddPath(ToDotNetString(filesInDir.top()));
 						filesInDir.pop();
 					}
 
-					log("Tworzenie w¹tków");
+					log(L"Tworzenie w¹tków");
 
 					array<Thread^>^ threads = gcnew array<Thread^>(numOfThreads);			// Tablica watkow
 
-					for (int i = 0; i < numOfThreads; i++)
+					for (int i = 0; i < numOfThreads; i++) {
 						threads[i] = gcnew Thread(gcnew ParameterizedThreadStart(&CalculateFiles::CalFile));
+						threads[i]->IsBackground = true;
+					}
 
-					log("Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
-					log("Proszê czekaæ ...");
+					log(L"Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
+					log(L"Proszê czekaæ ...");
 						
 					steady_clock::time_point start = GetTimePoint();						// Otrzymanie czasu poczatkowego timera
 
@@ -476,8 +480,11 @@ namespace JAONPPROJECT {
 
 					steady_clock::time_point stop = GetTimePoint();							// Otrzymanie czasu koncowego timera
 					microseconds duration = GetDuration(stop, start);						// Obiczenie czasu				
-					
-					log("Zakoñczono przetwarzanie plików w w¹tkach");
+
+					// INVOKE
+					this->TextBoxLogs->Invoke(gcnew LogDelegate(this, &MainWin::log),
+						L"Zakoñczono przetwarzanie plików w w¹tkach");
+
 					log(L"Pliki zosta³y utworzone w katalogu: " + this->TextBoxOutputPath->Text);
 					log("Czas przetwarzania plików [microseconds]: " + std::to_string(duration.count()));
 				}
@@ -488,7 +495,7 @@ namespace JAONPPROJECT {
 			else throw std::runtime_error("Nie uda³o za³adowaæ siê DLL: [hDLL is NULL]");
 		}
 		catch (const std::exception& ex) {
-			log("=================ERROR===================");
+			log(L"=================ERROR===================");
 			log(ex.what());
 			FreeLibrary(hDll);																// Zwolnienie biblioteki
 			hDll = NULL;
@@ -517,11 +524,13 @@ namespace JAONPPROJECT {
 	ref class ThreadClass {
 	public:
 		MainWin^ mw; // "this" MainWIn
+		int i;		// numer watkow (logi)
 		// Lista z sciezkami do przetworzenia
 		System::Collections::Generic::List<String^>^ paths = gcnew System::Collections::Generic::List<String^>();
 	public:
-		ThreadClass(MainWin^ _mw) {
+		ThreadClass(MainWin^ _mw, int _i) {
 			mw = _mw;
+			i = _i;
 		}
 		/* Metoda dodaje sciezke do listy
 		* @param String^ p sciezka do pliku
@@ -633,6 +642,7 @@ namespace JAONPPROJECT {
 		static void CalFile(Object^ data)
 		{	
 			ThreadClass^ threadClass = (ThreadClass^)data;							// Zrzutowanie na typ pakujacy dane	
+			threadClass->mw->log("Rozpoczêto w¹tek: " + std::to_string(threadClass->i));
 			double result = 0;														// Wynik wyrazenia ONP
 			steady_clock::time_point start;
 			steady_clock::time_point stop;
@@ -657,7 +667,7 @@ namespace JAONPPROJECT {
 				bSlashPosNext = srcPath.find_last_of('\\') + 1;
 				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
 				outPath = threadClass->mw->ToCppString(threadClass->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
-				
+	
 				if (std::filesystem::file_size(srcPath) > 1000) {					// Sprawdzenie rozmiaru pliku (MAX. 1kB)
 					fOut = std::ofstream(outPath, std::ios::out);
 					if (fOut.is_open()) {
@@ -668,11 +678,9 @@ namespace JAONPPROJECT {
 					}
 					continue;
 				}
-
 				file = std::ifstream(srcPath, std::ios::in);
-
 				if (file.is_open()) {
-					std::getline(file, fInputline);										// Wczytanie wyrazenia z pliku
+					std::getline(file, fInputline);													// Wczytanie wyrazenia z pliku
 					
 					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));		// Alokacja pamieci dla wyrazenia ONP																	//Sprawdzenie poprawnosci i uzupelnienie danych
 					std::string com = CheckMathExpressionInput(fInputline);
@@ -730,6 +738,7 @@ namespace JAONPPROJECT {
 					MessageBox::Show(msg);
 				}
 			} // for each (String ^ %st in threadClass->paths)
+			threadClass->mw->log("Skoñczono w¹tek: " + std::to_string(threadClass->i));
 		}
 	}; 	
 }; 

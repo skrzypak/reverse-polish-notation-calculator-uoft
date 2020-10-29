@@ -53,6 +53,8 @@
 ; - ConvertToRPN - dodanie wsparcia dla brakujacych znakow * przed nawiasami
 ; - ConvertToRPN - naprawienie bledow zwiazanych z obsluga liczb ujemnych
 ;
+; v0.8:
+; - ConvertToRPN - naprawa bledu zwiazana z znakiem NULL
 ;
 ;*/
 
@@ -318,10 +320,17 @@
 		jne @LoopStackClear										;tak, skok do nowego obiegu petli
 																;nie, przejscie dalej
 		@End:
-		mov rdi, 0												;RDI << '\0'
-		xor rax, rax											;RAX << 0
+		xor rax, rax											;RAX << 0 znak NULL
+		mov [rdi], rax											;RDI << '\0'
 		mov rax, 1												;RAX << brak bledow, TRUE
 		
+		
+		pop rdi													;przywrocenie RDI
+		pop rsi													;przywrocenie RSI
+		pop rbp													;przywrocenie RBP
+
+		ret														;return RAX
+
 		@Err:													;@Err
 		mov rax, 0												;RAX << wystapil blad, FALSE
 
