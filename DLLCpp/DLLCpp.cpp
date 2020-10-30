@@ -18,7 +18,7 @@ inline BYTE checkSignPriority(const char& sign)
     }
 }
 
-void __cdecl ConvertToRPN(const char* data, char* result)
+void __cdecl ConvertToRPN(const char* data, char* result, char sep)
 {
     BYTE priority;                                      // Zmienna przechowujaca uzyskany priorytet znaku
     std::stack<char> s;                                 // Stos do przechowywania operatorow
@@ -46,12 +46,12 @@ void __cdecl ConvertToRPN(const char* data, char* result)
     while(*data != '\0')
     {
         // Sprawdzenie czy wczytana zostala liczba czy operator
-        if ((*data >= '0' && *data <= '9') || *data == '.') {
+        if ((*data >= '0' && *data <= '9') || *data == sep) {
             do {
                 *result = *data;
                 result++;
                 data++;
-            } while ((*data >= '0' && *data <= '9') || *data == '.');
+            } while ((*data >= '0' && *data <= '9') || *data == sep);
             if (*data == '\0') goto END;
             *result = ' ';
             result++;
@@ -133,7 +133,7 @@ void __cdecl ConvertToRPN(const char* data, char* result)
     *result = '\0';
 }
 
-double __cdecl CalcRPN(const char* rpn) noexcept
+double __cdecl CalcRPN(const char* rpn, char sep) noexcept
 {
     std::stack<double> s;                                       // Stos przechowujacy liczby
     double num1;                                                // Tymaczoswa zmienna dla typu double
@@ -151,7 +151,7 @@ double __cdecl CalcRPN(const char* rpn) noexcept
     while (*rpn != '\0')
     {
                                                                 // Spradzenie czy wczytuje sie cyfre lub seperaotr
-        if (*rpn >= '0' || *rpn == '.') {
+        if (*rpn >= '0' || *rpn == sep) {
             std::stringstream ss;
             while (*rpn != ' ') {                               // Jesli tak to wczytanie calej liczby do strumienia
                 ss << *rpn;

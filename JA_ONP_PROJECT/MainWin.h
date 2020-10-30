@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <stack>
 #include <chrono> 
+#include <locale>
+#include <iostream>
 
 namespace JAONPPROJECT {
 
@@ -28,12 +30,16 @@ namespace JAONPPROJECT {
 	public ref class MainWin : public System::Windows::Forms::Form
 	{
 	public:
+
+		char separator;
+
 		MainWin(void)
 		{
 			InitializeComponent();
 			//
 			//TODO: Add the constructor code here
 			//
+			separator = std::use_facet< std::numpunct<char> >(std::cout.getloc()).decimal_point();
 		}
 
 	protected:
@@ -382,10 +388,10 @@ namespace JAONPPROJECT {
 
 	public:
 		// Typ CONVERT_TO_RPN potrzebny do wywolania funkcji ConvertToRPN z DLL
-		typedef void (*CONVERT_TO_RPN)(const char*, char*);
+		typedef void (*CONVERT_TO_RPN)(const char*, char*, char);
 
 		// Typ CALC_RPN potrzebny do wywolania funkcji CalcRPN z DLL
-		typedef double(*CALC_RPN)(const char*);
+		typedef double(*CALC_RPN)(const char*, char);
 
 		CONVERT_TO_RPN convertToRpnProc;	// Uchwyt dla funkcji ConverToRPN 
 		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
@@ -545,23 +551,28 @@ namespace JAONPPROJECT {
 	private:
 		/* Metoda sprawdza poprawnosc pobranego wyrazenia
 		* @param pobrany ciag znakow: std::string&
+		* @param lokalny seperator dziesietny: const char&
 		* @return komunikat bledu: std::string 
 		* @waring w przypadku braku bledu funkcja zwraca pusty ciag ""
 		* @warning metoda usuwa spacje z wyrazenia
 		*/
-		static std::string CheckMathExpressionInput(std::string& exp) {
+		static std::string CheckMathExpressionInput(std::string& exp, char separator) {
+			int i = 0;
 			int openBracket = 0;
 			int closeBracket = 0;
 			bool wasNum = false;
-			bool seperator = false;
+			bool bSep = false;
 
-			// Usuwanie spacji
-			for (int i = 0; i < exp.size(); i++) {
+																		// Usuwanie spacji
+			for (i = 0; i < exp.size(); i++) {
 				if (exp[i] == ' ') {
 					exp.erase(i, 1);
 					i--;
 				}
 			}
+
+			i = 1;														// Ustawienie licznika na drugi znak
+					
 																		// Pierwszy znak albo cyfra albo minus
 			if (exp[0] >= '0' && exp[0] <= '9') {
 				wasNum = true;
@@ -571,21 +582,36 @@ namespace JAONPPROJECT {
 				if(exp[0] == '(') openBracket++;
 			}
 
-			// Sprawdzenie poprawnosci znakow
-			for (int i = 1; i < exp.size(); i++) {
+																		// Sprawdzenie poprawnosci znakow
+			for (i; i < exp.size(); i++) {
 				if (exp[i] >= '0' && exp[i] <= '9') {					// Sprawdzenie czy liczba ma max. 1 seperator
 					wasNum = true;
 					do {
-						if(exp[i] == '.') {
-							if (seperator == true)
-								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]:: " + std::to_string(i + 1);
-							seperator = true;
+						if(exp[i] == separator) {
+							if (bSep == true)
+								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
+							bSep = true;
 						}
 						i++;
-					} while ((exp[i] >= '0' && exp[i] <= '9') || exp[i] == '.');
+					} while ((exp[i] >= '0' && exp[i] <= '9') || exp[i] == separator);
 					if (i > exp.size() - 1 || exp[i] == 0) break;
-					seperator = false;
+					bSep = false;
 				}
+																		// Analiza operatora, gdyby wystapil
+				if (exp[i] == separator) {
+					if(bSep)
+						return "Niedozwolony seperator dziesietny na pozycji [bez spacji]: " + std::to_string(i + 1);
+					else {
+																		// Najprawdopodobniej wczytno seperator na poz. 2
+						if (i == 2 && (exp[i - 1] >= '0' && exp[i - 1] <= '9')) {
+							bSep = true;
+							continue;
+						}
+						else return "Brak cyfry przed seperatorem dziesietnym na pozycji [bez spacji]: " + std::to_string(i + 1);
+					}
+					continue;
+				}
+
 				switch (exp[i]) {
 				case '(':
 					openBracket++;
@@ -600,9 +626,6 @@ namespace JAONPPROJECT {
 					if(i+1 < exp.size() && (exp[i+1] >= '0' && exp[i+1] <= '9'))
 						return "Brak operatora matemtycznego na pozycji [bez spacji]: " + std::to_string(i + 2);
 					break;
-				case '.':
-						return "Niedozwolone sa liczby postaci .123 na pozycji [bez spacji]: " + std::to_string(i + 1);
-					break;
 				case '/':
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
 						return "Niedozwolony operator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
@@ -611,7 +634,7 @@ namespace JAONPPROJECT {
 				case '+':
 				case '-':
 				case '*':
-					// Sprawdzenie czy nie wystepuja dwa operatory kolo siebie
+																		// Sprawdzenie czy nie wystepuja dwa operatory kolo siebie
 					if (exp[i - 1] == '+' || exp[i - 1] == '-' || exp[i - 1] == '*' || exp[i - 1] == '/')
 						return "Niedozwolony operator na pozycji [bez spacji]: " + std::to_string(i + 1);
 					if (exp[i + 1] == '+' || exp[i + 1] == '-' || exp[i + 1] == '*' || exp[i + 1] == '/')
@@ -683,7 +706,7 @@ namespace JAONPPROJECT {
 					std::getline(file, fInputline);													// Wczytanie wyrazenia z pliku
 					
 					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));		// Alokacja pamieci dla wyrazenia ONP																	//Sprawdzenie poprawnosci i uzupelnienie danych
-					std::string com = CheckMathExpressionInput(fInputline);
+					std::string com = CheckMathExpressionInput(fInputline, threadClass->mw->separator);
 					if (com != "") {
 						fOut = std::ofstream(outPath, std::ios::out);
 						if (fOut.is_open()) {
@@ -696,11 +719,11 @@ namespace JAONPPROJECT {
 					}
 					try {
 						// Wyzerowanie wyniku ONP
-						start = threadClass->mw->GetTimePoint();					// Otrzymanie czasu poczatkowego timera
-						(threadClass->mw->convertToRpnProc)(fInputline.c_str(), rpn);	// Konwersja wyrazenia matemaycznego na ONP
-						result = (threadClass->mw->calcRpnProc)(rpn);					// Obliczenie wyrazenia ONP
-						stop = threadClass->mw->GetTimePoint();					// Otrzymanie czasu koncowego timera
-						duration = threadClass->mw->GetDuration(stop, start);		// Obiczenie czasu			
+						start = threadClass->mw->GetTimePoint();													// Otrzymanie czasu poczatkowego timera
+						(threadClass->mw->convertToRpnProc)(fInputline.c_str(), rpn, threadClass->mw->separator);	// Konwersja wyrazenia matemaycznego na ONP
+						result = (threadClass->mw->calcRpnProc)(rpn, threadClass->mw->separator);					// Obliczenie wyrazenia ONP
+						stop = threadClass->mw->GetTimePoint();														// Otrzymanie czasu koncowego timera
+						duration = threadClass->mw->GetDuration(stop, start);										// Obiczenie czasu			
 					}
 					catch (const std::runtime_error& e) {
 						fOut = std::ofstream(outPath, std::ios::out);

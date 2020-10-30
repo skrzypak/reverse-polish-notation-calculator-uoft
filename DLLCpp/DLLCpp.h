@@ -62,16 +62,18 @@
 * Funkcja nie sprawdza poprawnosci danych wejsciowych.
 * @param data: char* wyrazenie matematyczne
 * @param result: char* zwraca skonwertowane wyrazenie w notacji ONP
+* @param znak seperatora dziesietnego: char
 * @warning przed wywolaniem funkcji nalezy dynamicznie zainicjalizowac zmienna CHAR* RESULT
 * @warning w razie wczytania blednego znaku funkcja zwraca wyjatek
 */
-extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result) throw();
+extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result, char sep) throw();
 
 /** Funkcja oblicza wyrazenie ONP, wynik zwraca w DOUBLE. W wyrazeniu kazda liczba i operator
 *  musi byc oddzielona znakiem spacji. Funkcja nie sprawdza poprawnosci danych wejsciowych.
 * Dane musza byc zakonczone znakiem NULL
 * @param rpn: const char* wyrazenie w ONP w postaci lanucha znakow
+* @param znak seperatora dziesietnego: char
 * @return funkcja zwraca wyniki wyrazenia ONP: double
 */
-extern "C" DLLCpp_API double __cdecl CalcRPN(const char* rpn) noexcept;
+extern "C" DLLCpp_API double __cdecl CalcRPN(const char* rpn, char sep) noexcept;
 

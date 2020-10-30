@@ -73,9 +73,10 @@
 	;Obsluguje liczby ujemne, -(, X(YYY) np. 125(3-5) -> 125*(3-5)
 	;@param RCX: ptr byte pobrany ciag znakow z pliku
 	;@param RDX: ptr byte buffor zapisu wyniku (zadeklarowany przed wywolaniem procedury)
+	;@param R8: seperatora dziesietnego
 	;@return 1 w przypadku braku bledow, 0 w razie napotkania bledu
 	;@warning modyfikowane flagi: PL, ZR, AC, PE, CY
-	;@warning modyfikowane rejestry: RBX, RCX, RDX, R8, R9, R10
+	;@warning modyfikowane rejestry: RBX, RCX, RDX, R8, R9, R10, R11
 	;@warning wyrazenie nie moze posiadac spacji
 	ConvertToRPN proc
 		
@@ -155,7 +156,7 @@
 			mov rax, [rsi]											;wczytanie znaku z RSI do RAX
 			cmp al, 0												;sprawdzenie czy nastepny znak to '\0'
 				je @LoopBreak											;tak, skok do @LoopBreak
-			cmp al, '.'												;sprawdzenie czy wczytano seperator .
+			cmp al, r8b												;sprawdzenie czy wczytano separator .
 				je @LoadNum												;tak, wczytano seperator -> skok do @LoadNum
 			cmp al, '0'												;sprawdzenie czy nastepny znak to cyfra
 				je @LoadNum												;wczytano 0 -> skok do @LoadNum
@@ -171,18 +172,18 @@
 			jmp @LoopInput										;pobranie nastepnego znaku -> skok do @LoopInput
 
 			@LoadSub:											;@LoadSub
-			xor r10, r10										;wyzerowanie r10 poniewaz bedziemy korzystac ino z r10b
-			mov r8, rsi											;wczytanie do r8 RSI, aby nie zepsuc wskaznika
-			mov r9, rsi											;identycznie dla r9 <- RSI
-			dec r8												;zmniejszamy r8 aby otrzymac poprzedni znak
-			inc r9												;zwiekszamy r9 aby otrzymac nastepny znak
-			mov r10, [r8]										;wczytujemy wartosc znaku spod r8 do r10
-			cmp r10b, '('										;sprawdzenie czy wystepuje sytuacja -(
+			xor r11, r11										;wyzerowanie r10 poniewaz bedziemy korzystac ino z r10b
+			mov r9, rsi											;wczytanie do r8 RSI, aby nie zepsuc wskaznika
+			mov r10, rsi											;identycznie dla r9 <- RSI
+			dec r9												;zmniejszamy r8 aby otrzymac poprzedni znak
+			inc r10												;zwiekszamy r9 aby otrzymac nastepny znak
+			mov r11, [r9]										;wczytujemy wartosc znaku spod r8 do r10
+			cmp r11b, '('										;sprawdzenie czy wystepuje sytuacja -(
 				jne @LoadSubOperator								;jesli nie, skok do @LoadSubOperator
 			mov [rdi], al										;RDI << '-'
 			inc rdi												;RDI++, przejscie do nastepnego wolnego miejsca
-			mov r10, [r9]										;wczytanie znaku spod r9 do r10
-			cmp r10b, '('										;sprawdzenie czy wystapila sytuacja (-(
+			mov r11, [r10]										;wczytanie znaku spod r9 do r10
+			cmp r11b, '('										;sprawdzenie czy wystapila sytuacja (-(
 				jne @LoopInput										;jesli nie, skok do @LoopInput
 																;jesli tak, to mamy sytuacje (-(
 			mov al, '1'											;wczytanie do AL 1
@@ -247,20 +248,20 @@
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadOpeningParenthesis:							;@LoadOpeningParenthesis	
-				xor r9, r9										;wyzerowanie r9
-				mov r8, rsi										;r8 <- RSI aby operowac na kopii
-				dec r8											;dekrementacja r8 w celu pozyskania poprzedniego znaku
-				mov r9, [r8]									;wczytaniu do r9 znaku spod adresu r8
-				cmp r9b, ')'									;porowanie czy poprzedni znak to (
+				xor r10, r10									;wyzerowanie r9
+				mov r9, rsi										;r8 <- RSI aby operowac na kopii
+				dec r9											;dekrementacja r8 w celu pozyskania poprzedniego znaku
+				mov r10, [r9]									;wczytaniu do r9 znaku spod adresu r8
+				cmp r10b, ')'									;porowanie czy poprzedni znak to (
 					jne @LOP@CheckBeforeNum							;jesli nie, skok do @LOP@CheckBeforeNum	
 				push '*'										;jesli tak, to mamy ")(" - wlozenie na stos * 
 				inc numOperatorStack							;inkrementacja ilosci elementow na stosie
 				jmp @LOP@PushOpeningBracket						;skok do LOP@PushOpeningBracket
 				
 				@LOP@CheckBeforeNum:							;@LOP@CheckBeforeNum
-				cmp r9b, '0'									;sprawdzenie czy znak < '0;
+				cmp r10b, '0'									;sprawdzenie czy znak < '0;
 					jb @LOP@PushOpeningBracket						;jesli tak, skok do @LOP@PushOpeningBracket
-				cmp r9b, '9'									;sprawdzenie czy znak > '9'								
+				cmp r10b, '9'									;sprawdzenie czy znak > '9'								
 					ja @LOP@PushOpeningBracket						;tak, skok do @LOP@PushOpeningBracket
 				push '*'										;nie, mamy sytuacje typu X(YYY), wlozenie * na stos
 				inc numOperatorStack							;inkrementacja ilosci elementow na stosie
@@ -386,9 +387,10 @@
 	;Procedura oblicza wartosc wyrazenia ONP, ktore moze skladac sie z cyfr, +, -, *, /, . i spacji
 	;Nie sprawdza poprawnosci parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
 	;@param RCX: <ptr byte> wyrazenie ONP, ktore musi byc zakonczone spacja (liczby ujemne) i znakiem NULL
+	;@param RDX: seperatora dziesietnego
 	;@return XMM0: <real8> zwraca wynik wyrazenia ONP. W przypadku bledu zwraca 0
 	;@warning modyfikowane flagi: OV, PL, ZR, AC, PE, CY
-	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, XMM0-7
+	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, R9, XMM0-7
 	CalcRPN proc
 
 		LOCAL currSign: BYTE										;znak wczytywanej liczby
@@ -436,7 +438,7 @@
 			PushXMM xmm0											;wlozenie wartosci XMM0 na stos
 			jmp CalcRPN@LOOPBreak									;skok do CalcRPN@LOOPBreak
 
-			CalcRPN@LoadNum:
+			CalcRPN@LoadNum:										;CalcRPN@LoadNum
 																	;COMM::wczytanie cechy liczby
 				xor rbx, rbx										;RBX <- 0 - przechowywac bedzie ceche liczby
 				mov rcx, 1											;mnoznik - RCX <- 1
@@ -447,13 +449,13 @@
 					push rax										;wkladam cyfre na stos
 					inc exponentSize									;inkrementacja EXPONENT_SIZE
 					inc rsi											;inkrementacja indexu RPN [RSI]
-					cmp byte ptr [rsi], '.'							;sprawdzenie czy wczytano seperator
+					cmp byte ptr [rsi], r8b							;sprawdzenie czy wczytano seperator
 						je CalcRPN@ExponentToDecimal					;tak, skok do CalcRPN@ExponentToDecimal
 					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano cala liczbe tzn.spacje
 						je CalcRPN@ExponentToDecimal					;tak, to skok do CalcRPN@ExponentToDecimal
 				jne	CalcRPN@LoadExponentNum							;nie, to wczytaj nastepna cyfre lub seperator
 
-				CalcRPN@ExponentToDecimal:
+				CalcRPN@ExponentToDecimal:							;CalcRPN@ExponentToDecimal
 					pop rax											;pobieram znaku cyfry ze stosu
 					sub al, EN48									;zamiana ASCII na cyfre (AL - '0')
 					mul rcx											;przemnozenie przez mnoznik
@@ -466,7 +468,7 @@
 
 					dec exponentSize								;zmniejszenie ilosci cyfr na stosie
 					cmp exponentSize, 0								;sprawdzenie czy przetworzono wszystkie cyfry
-				jne CalcRPN@ExponentToDecimal
+				jne CalcRPN@ExponentToDecimal							;jesli nie to skok do CalcRPN@ExponentToDecimal
 
 																	;RBX posiada wartosci cechy liczby
 				xorpd xmm1, xmm1 									;XMM1 <- 0
@@ -489,10 +491,10 @@
 				inc rsi												;inkrementacja licznika RPN [RSI]
 
 				CalcRPN@LoadMantissaNum:
-					xor r8, r8										;R8 <- 0
-					mov r8b, byte ptr [rsi]							;R8B <- znak cyfry
-					sub r8b, EN48									;R8B <- konwersja z ASCII na cyfre (R8B - '0')
-					cvtsi2sd  xmm3, r8								;XMM3 <- zsaladowanie cyfry z R8B
+					xor r9, r9										;R9 <- 0
+					mov r9b, byte ptr [rsi]							;R9B <- znak cyfry
+					sub r9b, EN48									;R9B <- konwersja z ASCII na cyfre (R8B - '0')
+					cvtsi2sd  xmm3, r9								;XMM3 <- zsaladowanie cyfry z R9B
 					mulsd xmm3, xmm2								;XMM3 <- CYFRA * MNOZNIK
 					addsd xmm1, xmm3								;dodanie uzyskanej wartosci do XMM1
 					mulsd xmm2,	xmm6								;XMM2 <- MNOZNIK * 0.1
