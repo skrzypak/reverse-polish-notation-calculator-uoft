@@ -135,7 +135,11 @@ void __cdecl ConvertToRPN(const char* data, char* result, char sep)
 
 double __cdecl CalcRPN(const char* rpn, char sep) noexcept
 {
+    std::stack<char> digs;                                      // Stos przechowujacy poszczegolne znaki cyfrowe liczby
     std::stack<double> s;                                       // Stos przechowujacy liczby
+    bool fSep = false;
+    unsigned int num0;                                          //
+    unsigned int mInt;                                          //
     double num1;                                                // Tymaczoswa zmienna dla typu double
     double num2;                                                // Tymaczoswa zmienna dla typu double
     char sign;                                                  // Zmienna przechowujaca znak liczby
@@ -151,7 +155,8 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
     while (*rpn != '\0')
     {
                                                                 // Spradzenie czy wczytuje sie cyfre lub seperaotr
-        if (*rpn >= '0' || *rpn == sep) {
+        if (*rpn >= '0' && *rpn <= '9') {
+            /*
             std::stringstream ss;
             while (*rpn != ' ') {                               // Jesli tak to wczytanie calej liczby do strumienia
                 ss << *rpn;
@@ -159,9 +164,41 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
             }
             ss >> num1;                                         // Konwersja liczby z string na double
             num1 = sign == '+' ? num1 : num1 * (-1);            // Okreslenie jej znaku
+           */
+                                                               // Pobranie cechy i wrzucenei na stos
+            while (*rpn != ' ') {
+                digs.push(*rpn);
+                rpn++;
+                if (*rpn == sep) {
+                    fSep = true;
+                    rpn++;
+                    break;
+                }
+            }
+                                                                // Pobranie cyfr ze stosu i konwersja na liczbe
+            num0 = 0;
+            mInt = 1;
+            while (digs.size() > 0) {
+                num0 += (digs.top() - '0') * mInt;
+                mInt *= 10;
+                digs.pop();
+            }  
+
+            num1 = static_cast<double>(num0);                                              
+                                                                // Pobranie cechy i zamiana na liczbe
+            if (fSep) {
+                num2 = 0.1;                                     // Zaladowanie mnoznika 0.1
+                while (*rpn != ' ') {
+                    num0 = *rpn - '0';
+                    num1 += static_cast<double>(num0) * num2;
+                    num2 *= 0.1;
+                    rpn++;
+                }
+            }
+                                                                // Uwzglednie znaku liczby
+            num1 = sign == '+' ? num1 : num1 * (-1);
             s.push(num1);                                       // Zaladowanie liczby na stos
             sign = '+';                                         // Przywrocenie znaku liczby dodatniej
-            rpn++;                                              // Ominiecie spacji i przescie do kolejengo obiegu petli
             continue;
         }
         else {

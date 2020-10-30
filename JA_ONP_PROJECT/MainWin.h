@@ -603,7 +603,7 @@ namespace JAONPPROJECT {
 						return "Niedozwolony seperator dziesietny na pozycji [bez spacji]: " + std::to_string(i + 1);
 					else {
 																		// Najprawdopodobniej wczytno seperator na poz. 2
-						if (i == 2 && (exp[i - 1] >= '0' && exp[i - 1] <= '9')) {
+						if (i == 1 && (exp[i - 1] >= '0' && exp[i - 1] <= '9')) {
 							bSep = true;
 							continue;
 						}

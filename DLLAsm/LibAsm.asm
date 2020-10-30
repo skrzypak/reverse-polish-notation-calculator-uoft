@@ -56,6 +56,10 @@
 ; v0.8:
 ; - ConvertToRPN - naprawa bledu zwiazana z znakiem NULL
 ;
+; v0.81:
+; - ConvertToRPN and CalcRPN - dodanie wsparcia dla operatorow regionalnych
+;
+;
 ;*/
 
 .data
@@ -172,17 +176,17 @@
 			jmp @LoopInput										;pobranie nastepnego znaku -> skok do @LoopInput
 
 			@LoadSub:											;@LoadSub
-			xor r11, r11										;wyzerowanie r10 poniewaz bedziemy korzystac ino z r10b
-			mov r9, rsi											;wczytanie do r8 RSI, aby nie zepsuc wskaznika
-			mov r10, rsi											;identycznie dla r9 <- RSI
-			dec r9												;zmniejszamy r8 aby otrzymac poprzedni znak
-			inc r10												;zwiekszamy r9 aby otrzymac nastepny znak
-			mov r11, [r9]										;wczytujemy wartosc znaku spod r8 do r10
+			xor r11, r11										;wyzerowanie r11 poniewaz bedziemy korzystac ino z r11b
+			mov r9, rsi											;wczytanie do r9 RSI, aby nie zepsuc wskaznika
+			mov r10, rsi											;identycznie dla r10 <- RSI
+			dec r9												;zmniejszamy r9 aby otrzymac poprzedni znak
+			inc r10												;zwiekszamy r10 aby otrzymac nastepny znak
+			mov r11, [r9]										;wczytujemy wartosc znaku spod r9 do r12
 			cmp r11b, '('										;sprawdzenie czy wystepuje sytuacja -(
 				jne @LoadSubOperator								;jesli nie, skok do @LoadSubOperator
 			mov [rdi], al										;RDI << '-'
 			inc rdi												;RDI++, przejscie do nastepnego wolnego miejsca
-			mov r11, [r10]										;wczytanie znaku spod r9 do r10
+			mov r11, [r10]										;wczytanie znaku spod r10 do r11
 			cmp r11b, '('										;sprawdzenie czy wystapila sytuacja (-(
 				jne @LoopInput										;jesli nie, skok do @LoopInput
 																;jesli tak, to mamy sytuacje (-(
@@ -248,10 +252,10 @@
 				jmp @LoopInput									;skok do @LoopInput
 			
 			@LoadOpeningParenthesis:							;@LoadOpeningParenthesis	
-				xor r10, r10									;wyzerowanie r9
-				mov r9, rsi										;r8 <- RSI aby operowac na kopii
-				dec r9											;dekrementacja r8 w celu pozyskania poprzedniego znaku
-				mov r10, [r9]									;wczytaniu do r9 znaku spod adresu r8
+				xor r10, r10									;wyzerowanie r10
+				mov r9, rsi										;r9 <- RSI aby operowac na kopii
+				dec r9											;dekrementacja r9 w celu pozyskania poprzedniego znaku
+				mov r10, [r9]									;wczytaniu do r10 znaku spod adresu r9
 				cmp r10b, ')'									;porowanie czy poprzedni znak to (
 					jne @LOP@CheckBeforeNum							;jesli nie, skok do @LOP@CheckBeforeNum	
 				push '*'										;jesli tak, to mamy ")(" - wlozenie na stos * 
@@ -401,6 +405,8 @@
 		push rdi													;kopia rejestru RDI
 
 		xor rax, rax												;wyzerowanie RAX
+		xor r8, r8													;wyzerowanie R8 w celu zrobienia kopii seperatora
+		mov r8, rdx													;R8 << zapisanie znaku seperatora
 		mov exponentSize, eax										;EXPONENT_SIZE <- EAX, wyzerowanie rozmiaru cechy liczby
 		movsd xmm6, DN01											;XMM6 <- 0.1
 		xorpd xmm7, xmm7											;XMM7 <- 0

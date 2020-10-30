@@ -41,6 +41,12 @@
 * - ConvertToRPN - dodanie wsparcia dla brakujacych znakow * przed nawiasami
 * - ConvertToRPN - naprawienie bledow zwiazanych z obsluga liczb ujemnych
 * 
+* v0.71:
+* - ConvertToRPN and CalcRPN - dodanie wsparcia dla operatorow regionalnych
+* 
+* v0.8:
+* - CalcToRPN - zsynchronizowanie kodu cpp i asm (usuniecie wczytywania liczby za pomoca strumienii)
+* 
 */
 
 #pragma once
