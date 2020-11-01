@@ -184,13 +184,13 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
                 digs.pop();
             }  
 
-            num1 = static_cast<double>(num0);                                              
+            num1 = num0 * 1.0;                                              
                                                                 // Pobranie cechy i zamiana na liczbe
             if (fSep) {
                 num2 = 0.1;                                     // Zaladowanie mnoznika 0.1
                 while (*rpn != ' ') {
                     num0 = *rpn - '0';
-                    num1 += static_cast<double>(num0) * num2;
+                    num1 += (num0 * 1.0) * num2;
                     num2 *= 0.1;
                     rpn++;
                 }

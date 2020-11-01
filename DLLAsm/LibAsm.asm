@@ -423,8 +423,11 @@
 			mov bl, byte ptr [rsi]									; ### DEBUG ###
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
 				je CalcRPN@LOOPBreak									;tak, wyjscie z petli
-			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak to cyfra
-				jae CalcRPN@LoadNum										;tak, skok do CalcRPN@LoadNum
+			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak >= '0' (czy pobrano cyfre)
+				jb CalcRPN@FalseLoadDig									;znak < '0' czyli wczytano inny znak - skok do CalcRPN@FalseLoadDig
+			cmp byte ptr [rsi], '9'									;tak, znak >= '0' - sprawdzenie czy znak <= '9'								
+				jbe CalcRPN@LoadNum										;tak, wczytano cyfre - skok do CalcRPN@LoadNum
+			CalcRPN@FalseLoadDig:									;CalcRPN@FalseLoadDig
 			cmp byte ptr [rsi], ' '									;sprawdzenie czy pobrany znak to spacja
 				je CalcRPN@LOOP											;tak, skok do CalcRPN@LOOP
 			cmp byte ptr [rsi], '-'									;sprawdzenie czy pobrany znak to '-'

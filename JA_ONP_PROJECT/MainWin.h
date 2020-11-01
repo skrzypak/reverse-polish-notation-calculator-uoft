@@ -30,7 +30,6 @@ namespace JAONPPROJECT {
 	public ref class MainWin : public System::Windows::Forms::Form
 	{
 	public:
-
 		char separator;
 
 		MainWin(void)
@@ -39,7 +38,6 @@ namespace JAONPPROJECT {
 			//
 			//TODO: Add the constructor code here
 			//
-			separator = std::use_facet< std::numpunct<char> >(std::cout.getloc()).decimal_point();
 		}
 
 	protected:
@@ -445,6 +443,10 @@ namespace JAONPPROJECT {
 						log("Liczba w¹tków zostaje zmniejszona do: " + std::to_string(numOfThreads));
 					}
 
+					log(L"Pobranie separatora dziesietnego");
+
+					separator = std::use_facet< std::numpunct<char>>(std::locale("")).decimal_point();
+
 					log(L"Segregacja plików ze wzglêdu na iloœæ w¹tków");
 
 					array<ThreadClass^>^ cf = gcnew array<ThreadClass^>(numOfThreads);		// Tablica obiektow watkowych
@@ -476,7 +478,11 @@ namespace JAONPPROJECT {
 					log(L"Rozpoczêcie wczytywania i przetwarzania danych z plików w w¹tkach");
 					log(L"Proszê czekaæ ...");
 						
-					steady_clock::time_point start = GetTimePoint();						// Otrzymanie czasu poczatkowego timera
+																							// Otrzymanie czasu poczatkowego timera
+					LARGE_INTEGER frequency;
+					QueryPerformanceFrequency(&frequency);
+					LARGE_INTEGER start;
+					QueryPerformanceCounter(&start);
 
 					for (int i = 0; i < numOfThreads; i++)
 						threads[i]->Start(cf[i]);											// Wystartowanie watkow
@@ -484,15 +490,17 @@ namespace JAONPPROJECT {
 					for (int i = 0; i < numOfThreads; i++)
 						threads[i]->Join();
 
-					steady_clock::time_point stop = GetTimePoint();							// Otrzymanie czasu koncowego timera
-					microseconds duration = GetDuration(stop, start);						// Obiczenie czasu				
+																							// Otrzymanie czasu koncowego timera
+					LARGE_INTEGER end;
+					QueryPerformanceCounter(&end);
+					double interval = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
 
 					// INVOKE
 					this->TextBoxLogs->Invoke(gcnew LogDelegate(this, &MainWin::log),
 						L"Zakoñczono przetwarzanie plików w w¹tkach");
 
 					log(L"Pliki zosta³y utworzone w katalogu: " + this->TextBoxOutputPath->Text);
-					log("Czas przetwarzania plików [microseconds]: " + std::to_string(duration.count()));
+					log("Czas przetwarzania plików w sekundach: " + interval);
 				}
 				else throw std::runtime_error("Nie uda³o wczytaæ siê wszystkich potrzebnych funkcji z DLL");
 				FreeLibrary(hDll);															// Zwolnienie biblioteki
@@ -506,24 +514,6 @@ namespace JAONPPROJECT {
 			FreeLibrary(hDll);																// Zwolnienie biblioteki
 			hDll = NULL;
 		}
-	}
-
-	/** Funkcja zwracajaca czas
-	*@return Zwraca czas: steady_clock::time_point
-	*/
-	steady_clock::time_point GetTimePoint()
-	{
-		return high_resolution_clock::now();
-	}
-
-	/** Funkcja zwracajaca czas wykonywanego algorytmu w mikrosekundach
-	*@param Stop: const steady_clock::time_point&
-	*@param Start: const steady_clock::time_point&
-	*@return Zwraca czas w mikrosekundach: microseconds
-	*/
-	microseconds GetDuration(const steady_clock::time_point& stop, const steady_clock::time_point& start)
-	{
-		return duration_cast<microseconds>(stop - start);
 	}
 
 	/** Klasa zawierjaca obiekt watkowy */
@@ -645,7 +635,7 @@ namespace JAONPPROJECT {
 						return "Niedozwolone jest stosowanie zapisu (-) na pozycji [bez spacji]: " + std::to_string(i + 1);
 					break;
 				default: 												// Pobranie niewiadomego znaku == false
-					return "Niedozwolony znak na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
+					return "Niedozwolony znak na pozycji [bez spacji]: " + std::to_string(i + 1);
 				}
 			}
 			if (openBracket != closeBracket)							// Sprawdzenie czy zgadza sie ilosc nawiasow
@@ -664,12 +654,9 @@ namespace JAONPPROJECT {
 		*/
 		static void CalFile(Object^ data)
 		{	
-			ThreadClass^ threadClass = (ThreadClass^)data;							// Zrzutowanie na typ pakujacy dane	
-			threadClass->mw->log("Rozpoczêto w¹tek: " + std::to_string(threadClass->i));
+			ThreadClass^ TC = (ThreadClass^)data;									// Zrzutowanie na typ pakujacy dane	
+			TC->mw->log("Rozpoczêto w¹tek: " + std::to_string(TC->i));
 			double result = 0;														// Wynik wyrazenia ONP
-			steady_clock::time_point start;
-			steady_clock::time_point stop;
-			microseconds duration;
 			std::ifstream file;														// Plik wejsciowy
 			std::ofstream fOut;														// Plik wynikowy
 			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
@@ -677,24 +664,24 @@ namespace JAONPPROJECT {
 			std::string fInputline;													// Zm. zawierajaca pobrana linie z pliku
 			std::string fOutnName;													// Zm. zawierjaca nazwe pliku wynikowego
 			std::string ext =														// "Rozszerzenie" pliku wynikowego
-				threadClass->mw->RadioBtnCpp->Checked ? ".rCPP" : ".rASM";
+				TC->mw->RadioBtnCpp->Checked ? ".rCPP" : ".rASM";
 			int bSlashPosNext;														// Zm. wykorzystywan do zdobycia nazwy pliku z sciezki
 																					// Przetworzenie plikow w petli
-			for each (String ^ %st in threadClass->paths) {
+			for each (String ^ %st in TC->paths) {
 				result = 0;
 				srcPath = std::string();
 				outPath = std::string();
 				fInputline = std::string();
 				
-				srcPath = threadClass->mw->ToCppString(st);
+				srcPath = TC->mw->ToCppString(st);
 				bSlashPosNext = srcPath.find_last_of('\\') + 1;
 				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
-				outPath = threadClass->mw->ToCppString(threadClass->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
+				outPath = TC->mw->ToCppString(TC->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
 	
 				if (std::filesystem::file_size(srcPath) > 1000) {					// Sprawdzenie rozmiaru pliku (MAX. 1kB)
 					fOut = std::ofstream(outPath, std::ios::out);
 					if (fOut.is_open()) {
-						fOut << "Plik [" + threadClass->mw->ToCppString(st) + "] jest za du¿y\n";
+						fOut << "Plik [" + TC->mw->ToCppString(st) + "] jest za du¿y\n";
 						fOut << "Maksymalny rozmiar pliku to 1KB\n";
 						fOut.close();
 						file.close();
@@ -704,9 +691,9 @@ namespace JAONPPROJECT {
 				file = std::ifstream(srcPath, std::ios::in);
 				if (file.is_open()) {
 					std::getline(file, fInputline);													// Wczytanie wyrazenia z pliku
-					
+					double interval = 0;
 					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));		// Alokacja pamieci dla wyrazenia ONP																	//Sprawdzenie poprawnosci i uzupelnienie danych
-					std::string com = CheckMathExpressionInput(fInputline, threadClass->mw->separator);
+					std::string com = CheckMathExpressionInput(fInputline, TC->mw->separator);
 					if (com != "") {
 						fOut = std::ofstream(outPath, std::ios::out);
 						if (fOut.is_open()) {
@@ -719,11 +706,17 @@ namespace JAONPPROJECT {
 					}
 					try {
 						// Wyzerowanie wyniku ONP
-						start = threadClass->mw->GetTimePoint();													// Otrzymanie czasu poczatkowego timera
-						(threadClass->mw->convertToRpnProc)(fInputline.c_str(), rpn, threadClass->mw->separator);	// Konwersja wyrazenia matemaycznego na ONP
-						result = (threadClass->mw->calcRpnProc)(rpn, threadClass->mw->separator);					// Obliczenie wyrazenia ONP
-						stop = threadClass->mw->GetTimePoint();														// Otrzymanie czasu koncowego timera
-						duration = threadClass->mw->GetDuration(stop, start);										// Obiczenie czasu			
+																										// Timer start
+						LARGE_INTEGER frequency;
+						QueryPerformanceFrequency(&frequency);
+						LARGE_INTEGER start;
+						QueryPerformanceCounter(&start);
+						(TC->mw->convertToRpnProc)(fInputline.c_str(), rpn, TC->mw->separator);			// Konwersja wyrazenia matemaycznego na ONP
+						result = (TC->mw->calcRpnProc)(rpn, TC->mw->separator);							// Obliczenie wyrazenia ONP
+																										// Otrzymanie czasu koncowego timera
+						LARGE_INTEGER end;
+						QueryPerformanceCounter(&end);
+						interval = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
 					}
 					catch (const std::runtime_error& e) {
 						fOut = std::ofstream(outPath, std::ios::out);
@@ -741,7 +734,7 @@ namespace JAONPPROJECT {
 						file.close();
 					}
 
-					fOut = std::ofstream(outPath, std::ios::out);							// Stworzenie pliku do zapisu
+					fOut = std::ofstream(outPath, std::ios::out);						// Stworzenie pliku do zapisu
 					if (fOut.good()) {
 						// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
 						fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
@@ -749,9 +742,14 @@ namespace JAONPPROJECT {
 						for (int c = 0; c < strlen(rpn); c++) {							// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
 							fOut << rpn[c];
 						}
-						fOut << "\nUzyskany wynik obliczeñ: " << std::setprecision(15) << result << "\n";		// Zapis wyniku ONP do pliku wynikowego
-						fOut << "Uzyskany czas [microseconds]: " << duration.count() << '\n';						// Zapis czasu przetwarzania do pliku wynikowego
-						fOut.close();
+																						// Zapis wyniku ONP do pliku wynikowego
+						std::stringstream ss;
+						ss << (int)result;
+						int precision = ss.str().length() + 16;
+						fOut << "\nUzyskany wynik obliczeñ: " << std::setprecision(precision) << result << "\n";
+																						// Zapis czasu przetwarzania do pliku wynikowego
+						fOut << "Uzyskany czas w sekundach: " << interval << '\n';
+						fOut.close();;
 					} // if fOut.good()
 					file.close();
 					delete rpn;
@@ -761,7 +759,7 @@ namespace JAONPPROJECT {
 					MessageBox::Show(msg);
 				}
 			} // for each (String ^ %st in threadClass->paths)
-			threadClass->mw->log("Skoñczono w¹tek: " + std::to_string(threadClass->i));
+			TC->mw->log("Skoñczono w¹tek: " + std::to_string(TC->i));
 		}
 	}; 	
 }; 
