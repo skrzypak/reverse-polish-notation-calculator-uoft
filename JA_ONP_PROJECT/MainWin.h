@@ -389,7 +389,7 @@ namespace JAONPPROJECT {
 		typedef void (*CONVERT_TO_RPN)(const char*, char*, char);
 
 		// Typ CALC_RPN potrzebny do wywolania funkcji CalcRPN z DLL
-		typedef double(*CALC_RPN)(const char*, char);
+		typedef void (*CALC_RPN)(const char*, char, double&);
 
 		CONVERT_TO_RPN convertToRpnProc;	// Uchwyt dla funkcji ConverToRPN 
 		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
@@ -656,7 +656,6 @@ namespace JAONPPROJECT {
 		{	
 			ThreadClass^ TC = (ThreadClass^)data;									// Zrzutowanie na typ pakujacy dane	
 			TC->mw->log("Rozpoczêto w¹tek: " + std::to_string(TC->i));
-			double result = 0;														// Wynik wyrazenia ONP
 			std::ifstream file;														// Plik wejsciowy
 			std::ofstream fOut;														// Plik wynikowy
 			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
@@ -668,7 +667,6 @@ namespace JAONPPROJECT {
 			int bSlashPosNext;														// Zm. wykorzystywan do zdobycia nazwy pliku z sciezki
 																					// Przetworzenie plikow w petli
 			for each (String ^ %st in TC->paths) {
-				result = 0;
 				srcPath = std::string();
 				outPath = std::string();
 				fInputline = std::string();
@@ -704,6 +702,7 @@ namespace JAONPPROJECT {
 						}
 						continue;
 					}
+					double result = 0;																	// Wynik wyrazenia ONP
 					try {
 						// Wyzerowanie wyniku ONP
 																										// Timer start
@@ -712,7 +711,7 @@ namespace JAONPPROJECT {
 						LARGE_INTEGER start;
 						QueryPerformanceCounter(&start);
 						(TC->mw->convertToRpnProc)(fInputline.c_str(), rpn, TC->mw->separator);			// Konwersja wyrazenia matemaycznego na ONP
-						result = (TC->mw->calcRpnProc)(rpn, TC->mw->separator);							// Obliczenie wyrazenia ONP
+						(TC->mw->calcRpnProc)(rpn, TC->mw->separator, result);							// Obliczenie wyrazenia ONP
 																										// Otrzymanie czasu koncowego timera
 						LARGE_INTEGER end;
 						QueryPerformanceCounter(&end);
@@ -743,10 +742,8 @@ namespace JAONPPROJECT {
 							fOut << rpn[c];
 						}
 																						// Zapis wyniku ONP do pliku wynikowego
-						std::stringstream ss;
-						ss << (int)result;
-						int precision = ss.str().length() + 16;
-						fOut << "\nUzyskany wynik obliczeñ: " << std::setprecision(precision) << result << "\n";
+						fOut.precision(std::numeric_limits<long double>::digits10);
+						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";
 																						// Zapis czasu przetwarzania do pliku wynikowego
 						fOut << "Uzyskany czas w sekundach: " << interval << '\n';
 						fOut.close();;

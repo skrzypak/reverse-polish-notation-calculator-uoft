@@ -79,7 +79,7 @@ extern "C" DLLCpp_API void __cdecl ConvertToRPN(const char* data, char* result, 
 * Dane musza byc zakonczone znakiem NULL
 * @param rpn: const char* wyrazenie w ONP w postaci lanucha znakow
 * @param znak seperatora dziesietnego: char
-* @return funkcja zwraca wyniki wyrazenia ONP: double
+* @param referancja na wynik: double&
 */
-extern "C" DLLCpp_API double __cdecl CalcRPN(const char* rpn, char sep) noexcept;
+extern "C" DLLCpp_API void __cdecl CalcRPN(const char* rpn, char sep, double& result) noexcept;
 

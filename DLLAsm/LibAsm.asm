@@ -392,9 +392,10 @@
 	;Nie sprawdza poprawnosci parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
 	;@param RCX: <ptr byte> wyrazenie ONP, ktore musi byc zakonczone spacja (liczby ujemne) i znakiem NULL
 	;@param RDX: seperatora dziesietnego
-	;@return XMM0: <real8> zwraca wynik wyrazenia ONP. W przypadku bledu zwraca 0
+	;@param R8&: <real8> wynik wyrazenia ONP.
+	;@return brak bledu -> 1, napotkanie bledu 0
 	;@warning modyfikowane flagi: OV, PL, ZR, AC, PE, CY
-	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, R9, XMM0-7
+	;@warning modyfikowane rejestry: RAX, RBX, RCX, RDX, R8, R9, R10, XMM0-7
 	CalcRPN proc
 
 		LOCAL currSign: BYTE										;znak wczytywanej liczby
@@ -405,11 +406,10 @@
 		push rdi													;kopia rejestru RDI
 
 		xor rax, rax												;wyzerowanie RAX
-		xor r8, r8													;wyzerowanie R8 w celu zrobienia kopii seperatora
-		mov r8, rdx													;R8 << zapisanie znaku seperatora
+		xor r9, r9													;wyzerowanie R9 w celu zrobienia kopii seperatora
+		mov r9, rdx													;R9 << zapisanie znaku seperatora
 		mov exponentSize, eax										;EXPONENT_SIZE <- EAX, wyzerowanie rozmiaru cechy liczby
 		movsd xmm6, DN01											;XMM6 <- 0.1
-		xorpd xmm7, xmm7											;XMM7 <- 0
 
 		mov rsi, rcx												;zaladowanie RPN do ESI
 
@@ -420,7 +420,6 @@
 
 		CalcRPN@LOOP:												;CalcRPN@LOOP
 			inc rsi													;inkrementacja indeksu tablicy RPN
-			mov bl, byte ptr [rsi]									; ### DEBUG ###
 			cmp byte ptr [rsi], 0									;sprawdzenie czy wczytano znak '\0'
 				je CalcRPN@LOOPBreak									;tak, wyjscie z petli
 			cmp byte ptr [rsi], '0'									;sprawdzenie czy pobrany znak >= '0' (czy pobrano cyfre)
@@ -443,9 +442,7 @@
 				je CalcRPN@LoadMull										;tak, - skok do CalcRPN@LoadMull
 			cmp byte ptr [rsi], '/'									;sprawdzenie czy pobrany znak to '/'
 				je CalcRPN@LoadDiv										;tak, skok do CalcRPN@LoadDiv
-			xorps xmm0, xmm0										;jesli nie to wyzerowanie XMM0 w celu zwrocenia bledu funkcji
-			PushXMM xmm0											;wlozenie wartosci XMM0 na stos
-			jmp CalcRPN@LOOPBreak									;skok do CalcRPN@LOOPBreak
+			jmp CalcRPN@ERR											;skok do CCalcRPN@ERR
 
 			CalcRPN@LoadNum:										;CalcRPN@LoadNum
 																	;COMM::wczytanie cechy liczby
@@ -458,7 +455,7 @@
 					push rax										;wkladam cyfre na stos
 					inc exponentSize									;inkrementacja EXPONENT_SIZE
 					inc rsi											;inkrementacja indexu RPN [RSI]
-					cmp byte ptr [rsi], r8b							;sprawdzenie czy wczytano seperator
+					cmp byte ptr [rsi], r9b							;sprawdzenie czy wczytano seperator
 						je CalcRPN@ExponentToDecimal					;tak, skok do CalcRPN@ExponentToDecimal
 					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano cala liczbe tzn.spacje
 						je CalcRPN@ExponentToDecimal					;tak, to skok do CalcRPN@ExponentToDecimal
@@ -486,24 +483,21 @@
 				cmp byte ptr [rsi], " "								;sprawdznie czy wczytano cala liczbe tzn.spacje
 					je CalcRPN@NumReady									;tak, to skok do CalcRPN@NumReady
 																	
-																	;XMM0
 																	;XMM1 - WYNIK (CECHA+MANTYSA)
 																	;XMM2 - MNOZNIK
 																	;XMM3 - CYFRA * MNOZNIK
 																	;XMM4 - pop XMM (TMP_1)
 																	;XMM5 - pop XMM (TMP_2)
 																	;XMM6 - 0.1
-																	;XMM7 - 0.0
 
 				movsd xmm2, xmm6									;XMM2 <- 0.1
 
 				inc rsi												;inkrementacja licznika RPN [RSI]
-
+				xor r10, r10										;R10 <- 0
 				CalcRPN@LoadMantissaNum:
-					xor r9, r9										;R9 <- 0
-					mov r9b, byte ptr [rsi]							;R9B <- znak cyfry
-					sub r9b, EN48									;R9B <- konwersja z ASCII na cyfre (R8B - '0')
-					cvtsi2sd  xmm3, r9								;XMM3 <- zsaladowanie cyfry z R9B
+					mov r10b, byte ptr [rsi]							;R10B <- znak cyfry
+					sub r10b, EN48									;R10B <- konwersja z ASCII na cyfre (R10B - '0')
+					cvtsi2sd  xmm3, r10								;XMM3 <- zsaladowanie cyfry z R10B
 					mulsd xmm3, xmm2								;XMM3 <- CYFRA * MNOZNIK
 					addsd xmm1, xmm3								;dodanie uzyskanej wartosci do XMM1
 					mulsd xmm2,	xmm6								;XMM2 <- MNOZNIK * 0.1
@@ -518,9 +512,9 @@
 				cmp currSign, '-'									;sprawdzenie czy CURR_SIGN == '-'
 					jne PositiveNum										;jesli nie to skok do PositiveNum
 				 													;jesli tak to:
-				xorpd xmm5, xmm5										;XMM5 <- 0
-				subsd xmm5, xmm1										;XMM5 - XMM1
-				movsd xmm1, xmm5										;XMM1 <- XMM5
+				xorpd xmm0, xmm0										;XMM0 <- 0
+				subsd xmm0, xmm1										;XMM0 -= XMM1
+				movsd xmm1, xmm0										;XMM1 == -XMM1
 				
 				PositiveNum:										;PositiveNum
 				PushXMM xmm1										;odlozenie wyniku na stos
@@ -560,14 +554,23 @@
 		jmp CalcRPN@LOOP											;skok do CalcRPN@LOOP - wczytanie nastepnego znaku RPN
 
 		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
-
-		PopXMM xmm0												; pobranie wyniku koncowego ze stosu
-
+		
+		PopXMM xmm0												;pobranie wyniku koncowego ze stosu
+		movdqu XMMWORD PTR [r8], xmm0							;zaladowanie wyniku do RDI
+		
 		pop rdi													;przywrocenie RDI
 		pop rsi													;przywrocenie RSI
 		pop rbp													;przywrocenie RBP
+		xor rax, rax											;wyzerowanie RAX w celu zwrocenia z procedury 1
+		mov rax, 1												;zaladowanie 1 do RAX
+		ret														;return
 
-		ret														;return XMM0
+		CalcRPN@ERR:
+		pop rdi													;przywrocenie RDI
+		pop rsi													;przywrocenie RSI
+		pop rbp													;przywrocenie RBP
+		xor rax, rax											;wyzerowanie RAX w celu zwrocenia z procedury 0
+		ret														;return
 
 	CalcRPN endp
 

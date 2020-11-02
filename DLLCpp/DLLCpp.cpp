@@ -52,7 +52,7 @@ void __cdecl ConvertToRPN(const char* data, char* result, char sep)
                 result++;
                 data++;
             } while ((*data >= '0' && *data <= '9') || *data == sep);
-            if (*data == '\0') goto END;
+            if (*data == '\0') goto END;                              // Wczytano wszystkie liczby skok do END
             *result = ' ';
             result++;
         }
@@ -63,21 +63,21 @@ void __cdecl ConvertToRPN(const char* data, char* result, char sep)
                 if (*(data - 1) == '(') {
                     *result = *data;
                     result++;
-                    if (*(data+1) == '(') {                             // Sprawdzenie czy przypadek "-("
-                        *result = '1';                              // Jesli tak to wypsianie do resulta "1 "
+                    if (*(data+1) == '(') {                          // Sprawdzenie czy przypadek "-("
+                        *result = '1';                               // Jesli tak to wypsianie do resulta "1 "
                         result++;
                         *result = ' ';
                         result++;
                                                                     // i wrzucenie * nas stos
                         s.push('*');
-                        s.push('(');
+                        s.push('(');    
                         data++;                                     // przejscie do nastepnego znaku w DATA
                     }
                     break;
                 }
             case '*':
             case '/':
-                // Wykonanie czynnosci zwiazanych z operatorami matemtaycznymi (alg. konwersji)
+                // Wykonanie czynnosci zwiazanych z operatorami matemtycznymi / lub * (alg. konwersji)
                 priority = checkSignPriority(*data);
                 while (s.size())
                 {
@@ -133,13 +133,12 @@ void __cdecl ConvertToRPN(const char* data, char* result, char sep)
     *result = '\0';
 }
 
-double __cdecl CalcRPN(const char* rpn, char sep) noexcept
+void CalcRPN(const char* rpn, char sep, double& result) noexcept
 {
     std::stack<char> digs;                                      // Stos przechowujacy poszczegolne znaki cyfrowe liczby
     std::stack<double> s;                                       // Stos przechowujacy liczby
-    bool fSep = false;
-    unsigned int num0;                                          //
-    unsigned int mInt;                                          //
+    bool fSep = false;                                          // Wskazuje czy liczba posiada seperator
+    long double mInt;                                           // TEMP
     double num1;                                                // Tymaczoswa zmienna dla typu double
     double num2;                                                // Tymaczoswa zmienna dla typu double
     char sign;                                                  // Zmienna przechowujaca znak liczby
@@ -165,6 +164,7 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
             ss >> num1;                                         // Konwersja liczby z string na double
             num1 = sign == '+' ? num1 : num1 * (-1);            // Okreslenie jej znaku
            */
+            
                                                                // Pobranie cechy i wrzucenei na stos
             while (*rpn != ' ') {
                 digs.push(*rpn);
@@ -176,27 +176,27 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
                 }
             }
                                                                 // Pobranie cyfr ze stosu i konwersja na liczbe
-            num0 = 0;
+            num1 = 0;
             mInt = 1;
             while (digs.size() > 0) {
-                num0 += (digs.top() - '0') * mInt;
+                num1 += static_cast<double>(digs.top() - '0') * mInt;
                 mInt *= 10;
                 digs.pop();
             }  
 
-            num1 = num0 * 1.0;                                              
+            num1 = num1 * 1.0;                                              
                                                                 // Pobranie cechy i zamiana na liczbe
             if (fSep) {
                 num2 = 0.1;                                     // Zaladowanie mnoznika 0.1
                 while (*rpn != ' ') {
-                    num0 = *rpn - '0';
-                    num1 += (num0 * 1.0) * num2;
+                    num1 += static_cast<double>(*rpn - '0') * num2;
                     num2 *= 0.1;
                     rpn++;
                 }
             }
                                                                 // Uwzglednie znaku liczby
             num1 = sign == '+' ? num1 : num1 * (-1);
+            
             s.push(num1);                                       // Zaladowanie liczby na stos
             sign = '+';                                         // Przywrocenie znaku liczby dodatniej
             continue;
@@ -247,8 +247,7 @@ double __cdecl CalcRPN(const char* rpn, char sep) noexcept
         rpn++;
     }
                                                                // Pobranie wyniku ze stosu i zwrocenie go jako wynik funkcji
-    double result = s.top();
+    result = s.top();
     s.pop();
-    return result;
 }
 
