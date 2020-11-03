@@ -494,7 +494,7 @@
 
 				inc rsi												;inkrementacja licznika RPN [RSI]
 				xor r10, r10										;R10 <- 0
-				CalcRPN@LoadMantissaNum:
+				CalcRPN@LoadMantissaNum:							;CalcRPN@LoadMantissaNum
 					mov r10b, byte ptr [rsi]							;R10B <- znak cyfry
 					sub r10b, EN48									;R10B <- konwersja z ASCII na cyfre (R10B - '0')
 					cvtsi2sd  xmm3, r10								;XMM3 <- zsaladowanie cyfry z R10B
@@ -504,7 +504,7 @@
 					inc rsi											;inkrementacja licznika RPN [RSI]
 					cmp byte ptr [rsi], " "							;sprawdznie czy wczytano cala liczbe tzn.spacje
 						je CalcRPN@NumReady								;tak, to skok do CalcRPN@WholeNum
-				jne CalcRPN@LoadMantissaNum							;nie, to wczytaj nastepna cyfre
+				jne CalcRPN@LoadMantissaNum							;nie, to skok do CalcRPN@LoadMantissaNum
 
 				CalcRPN@NumReady:									;CalcRPN@NumReady
 

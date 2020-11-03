@@ -619,8 +619,26 @@ namespace JAONPPROJECT {
 				case '/':
 					if (i == exp.size() - 1)							// Ostatni znak nie moze by operatorem
 						return "Niedozwolony operator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
-					if (exp[i+1] == '0')								// Nie wolno dzielic przez 0
-						return "Nie wolno dzielic przez 0 na pozycji [bez spacji]: " + std::to_string(i+2);
+					if (exp[i + 1] == '0')								// Sprawdzenei czy dzilimy przez 0
+					{
+						int j = i + 2;
+						bool isZero = true;
+																		// Sprawdzenie czy liczba jest 0
+						while (j <= exp.size() - 1) {
+							if ((exp[j] > '0' && exp[j] <= '9')) {
+								isZero = false;
+								break;
+							}
+							else if (exp[j] == separator || exp[j] == '0')
+								j++;
+							else break;
+						}
+
+						if (isZero) {
+							return "Nie wolno dzielic przez 0 na pozycji [bez spacji]: " + std::to_string(i + 2);
+						}
+
+					}
 				case '+':
 				case '-':
 				case '*':
@@ -682,15 +700,15 @@ namespace JAONPPROJECT {
 						fOut << "Plik [" + TC->mw->ToCppString(st) + "] jest za du¿y\n";
 						fOut << "Maksymalny rozmiar pliku to 1KB\n";
 						fOut.close();
-						file.close();
 					}
 					continue;
 				}
 				file = std::ifstream(srcPath, std::ios::in);
 				if (file.is_open()) {
 					std::getline(file, fInputline);													// Wczytanie wyrazenia z pliku
-					double interval = 0;
-					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));		// Alokacja pamieci dla wyrazenia ONP																	//Sprawdzenie poprawnosci i uzupelnienie danych
+					file.close();
+					double interval = 0;															
+																									//Sprawdzenie poprawnosci i uzupelnienie danych
 					std::string com = CheckMathExpressionInput(fInputline, TC->mw->separator);
 					if (com != "") {
 						fOut = std::ofstream(outPath, std::ios::out);
@@ -698,10 +716,10 @@ namespace JAONPPROJECT {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << com;
 							fOut.close();
-							file.close();
 						}
 						continue;
 					}
+					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));			// Alokacja pamieci dla wyrazenia ONP
 					double result = 0;																	// Wynik wyrazenia ONP
 					try {
 						// Wyzerowanie wyniku ONP
@@ -723,19 +741,20 @@ namespace JAONPPROJECT {
 							fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 							fOut << "Nie uda³o dokonaæ siê konwersji wyra¿enia'\n'";
 							fOut.close();
-							file.close();
+							delete rpn;
 						}
 						continue;
 					}
 					catch (...) {
 						String^ msg = L"Wyst¹pi³ niespodziewany b³¹d dla pliku: " + st;
 						MessageBox::Show(msg);
-						file.close();
+						delete rpn;
+						continue;
 					}
 
 					fOut = std::ofstream(outPath, std::ios::out);						// Stworzenie pliku do zapisu
 					if (fOut.good()) {
-						// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
+																						// Wypisanie wyrazenia ONP, czasu i wyniku do pliku 
 						fOut << "Wyra¿enie wejœciowe: " << fInputline << '\n';
 						fOut << "Uzyskane wyra¿enie ONP: ";
 						for (int c = 0; c < strlen(rpn); c++) {							// Zapis wyrazenia ONP do pliku wynikowego (this->TextBoxOutputPath->Text)
@@ -746,9 +765,8 @@ namespace JAONPPROJECT {
 						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";
 																						// Zapis czasu przetwarzania do pliku wynikowego
 						fOut << "Uzyskany czas w sekundach: " << interval << '\n';
-						fOut.close();;
+						fOut.close();
 					} // if fOut.good()
-					file.close();
 					delete rpn;
 				}
 				else {
