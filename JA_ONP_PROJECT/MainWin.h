@@ -175,6 +175,8 @@ namespace JAONPPROJECT {
 			// 
 			// BtnDo
 			// 
+			this->BtnDo->Cursor = System::Windows::Forms::Cursors::Hand;
+			this->BtnDo->DialogResult = System::Windows::Forms::DialogResult::No;
 			resources->ApplyResources(this->BtnDo, L"BtnDo");
 			this->BtnDo->Name = L"BtnDo";
 			this->BtnDo->UseVisualStyleBackColor = true;
@@ -318,6 +320,7 @@ namespace JAONPPROJECT {
 			this->DataOutpuBox->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
+			this->ActiveControl = this->RadioBtnCpp;
 
 		}
 
@@ -395,8 +398,7 @@ namespace JAONPPROJECT {
 		CALC_RPN calcRpnProc;				// Uchwyt dla funkcji CalcRPN 
 
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
-
-		// TODO: validate();
+		
 		this->TextBoxLogs->Text = "";
 		log(L"================PARAMETRY=================");
 		log("Dane Ÿród³owe: " + this->TextBoxPath->Text);
@@ -411,6 +413,10 @@ namespace JAONPPROJECT {
 			LoadLibrary(TEXT("DLLCpp")) : LoadLibrary(TEXT("DLLAsm"));
 
 		try {
+			if (this->TextBoxOutputPath->Text == "") {
+				throw(std::exception("Sciezka katalogu wynikowego jest pusta"));
+			}
+
 			if (hDll != NULL)
 			{
 				log(L"Uda³o za³adowaæ siê bibliotekê DLL :)");
@@ -484,8 +490,11 @@ namespace JAONPPROJECT {
 					LARGE_INTEGER start;
 					QueryPerformanceCounter(&start);
 
-					for (int i = 0; i < numOfThreads; i++)
-						threads[i]->Start(cf[i]);											// Wystartowanie watkow
+					for (int i = 0; i < numOfThreads; i++) {
+						log("Rozpoczêto w¹tek: " + std::to_string(i+1));
+						threads[i]->Start(cf[i]);
+					}
+																						// Wystartowanie watkow
 						
 					for (int i = 0; i < numOfThreads; i++)
 						threads[i]->Join();
@@ -514,6 +523,7 @@ namespace JAONPPROJECT {
 			FreeLibrary(hDll);																// Zwolnienie biblioteki
 			hDll = NULL;
 		}
+		return;
 	}
 
 	/** Klasa zawierjaca obiekt watkowy */
@@ -673,7 +683,6 @@ namespace JAONPPROJECT {
 		static void CalFile(Object^ data)
 		{	
 			ThreadClass^ TC = (ThreadClass^)data;									// Zrzutowanie na typ pakujacy dane	
-			TC->mw->log("Rozpoczêto w¹tek: " + std::to_string(TC->i));
 			std::ifstream file;														// Plik wejsciowy
 			std::ofstream fOut;														// Plik wynikowy
 			std::string srcPath;													// Œcie¿ka do pliku zrodlowego
