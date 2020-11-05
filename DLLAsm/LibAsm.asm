@@ -59,6 +59,8 @@
 ; v0.81:
 ; - ConvertToRPN and CalcRPN - dodanie wsparcia dla operatorow regionalnych
 ;
+; v1.0:
+; - Optymalizacja kodu
 ;
 ;*/
 

@@ -399,6 +399,7 @@ namespace JAONPPROJECT {
 
 	private: System::Void BtnDo_Click(System::Object^ sender, System::EventArgs^ e) {
 		
+		this->BtnDo->Cursor = System::Windows::Forms::Cursors::WaitCursor;
 		this->TextBoxLogs->Text = "";
 		log(L"================PARAMETRY=================");
 		log("Dane Ÿród³owe: " + this->TextBoxPath->Text);
@@ -523,6 +524,7 @@ namespace JAONPPROJECT {
 			FreeLibrary(hDll);																// Zwolnienie biblioteki
 			hDll = NULL;
 		}
+		this->BtnDo->Cursor = System::Windows::Forms::Cursors::Hand;
 		return;
 	}
 
@@ -589,6 +591,10 @@ namespace JAONPPROJECT {
 					do {
 						if(exp[i] == separator) {
 							if (bSep == true)
+								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
+							if(i >= exp.size() - 1)
+								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
+							else if(exp[i+1] < '0' || exp[i+1] > '9')
 								return "Niedopuszczalny seperator na pozycji na pozycji [bez spacji]: " + std::to_string(i + 1);
 							bSep = true;
 						}
@@ -703,7 +709,7 @@ namespace JAONPPROJECT {
 				fOutnName = srcPath.substr(bSlashPosNext, srcPath.size() - bSlashPosNext);
 				outPath = TC->mw->ToCppString(TC->mw->TextBoxOutputPath->Text) + "\\" +fOutnName + ext;
 	
-				if (std::filesystem::file_size(srcPath) > 1000) {					// Sprawdzenie rozmiaru pliku (MAX. 1kB)
+				if (std::filesystem::file_size(srcPath) > 1024) {					// Sprawdzenie rozmiaru pliku (MAX. 1kB)
 					fOut = std::ofstream(outPath, std::ios::out);
 					if (fOut.is_open()) {
 						fOut << "Plik [" + TC->mw->ToCppString(st) + "] jest za du¿y\n";

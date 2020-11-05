@@ -47,6 +47,10 @@
 * v0.8:
 * - CalcToRPN - zsynchronizowanie kodu cpp i asm (usuniecie wczytywania liczby za pomoca strumienii)
 * 
+* 
+* v1.0:
+* - Optymalizacja kodu
+* 
 */
 
 #pragma once
