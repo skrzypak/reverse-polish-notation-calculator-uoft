@@ -79,7 +79,7 @@
 	;Obsluguje liczby ujemne, -(, X(YYY) np. 125(3-5) -> 125*(3-5)
 	;@param RCX: ptr byte pobrany ciag znakow z pliku
 	;@param RDX: ptr byte buffor zapisu wyniku (zadeklarowany przed wywolaniem procedury)
-	;@param R8: seperatora dziesietnego
+	;@param R8: separatora dziesietnego
 	;@return 1 w przypadku braku bledow, 0 w razie napotkania bledu
 	;@warning modyfikowane flagi: PL, ZR, AC, PE, CY
 	;@warning modyfikowane rejestry: RBX, RCX, RDX, R8, R9, R10, R11
@@ -393,7 +393,7 @@
 	;Procedura oblicza wartosc wyrazenia ONP, ktore moze skladac sie z cyfr, +, -, *, /, . i spacji
 	;Nie sprawdza poprawnosci parametrow wejsciowych. Kazda liczba i znak musi byc oddzielony spacja.
 	;@param RCX: <ptr byte> wyrazenie ONP, ktore musi byc zakonczone spacja (liczby ujemne) i znakiem NULL
-	;@param RDX: seperatora dziesietnego
+	;@param RDX: znak separatora dziesietnego
 	;@param R8&: <real8> wynik wyrazenia ONP.
 	;@return brak bledu -> 1, napotkanie bledu 0
 	;@warning modyfikowane flagi: OV, PL, ZR, AC, PE, CY
@@ -408,8 +408,8 @@
 		push rdi													;kopia rejestru RDI
 
 		xor rax, rax												;wyzerowanie RAX
-		xor r9, r9													;wyzerowanie R9 w celu zrobienia kopii seperatora
-		mov r9, rdx													;R9 << zapisanie znaku seperatora
+		xor r9, r9													;wyzerowanie R9 w celu zrobienia kopii separatora
+		mov r9, rdx													;R9 << zapisanie znaku separatora
 		mov exponentSize, eax										;EXPONENT_SIZE <- EAX, wyzerowanie rozmiaru cechy liczby
 		movsd xmm6, DN01											;XMM6 <- 0.1
 
@@ -558,7 +558,7 @@
 		CalcRPN@LOOPBreak:											;CalcRPN@LOOPBreak
 		
 		PopXMM xmm0												;pobranie wyniku koncowego ze stosu
-		movdqu XMMWORD PTR [r8], xmm0							;zaladowanie wyniku do RDI
+		movdqu XMMWORD PTR [r8], xmm0							;zaladowanie wyniku do R8
 		
 		pop rdi													;przywrocenie RDI
 		pop rsi													;przywrocenie RSI

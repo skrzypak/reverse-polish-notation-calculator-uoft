@@ -737,7 +737,6 @@ namespace JAONPPROJECT {
 					char* rpn = (char*)calloc(round(fInputline.size() * 2.5), sizeof(char*));			// Alokacja pamieci dla wyrazenia ONP
 					double result = 0;																	// Wynik wyrazenia ONP
 					try {
-						// Wyzerowanie wyniku ONP
 																										// Timer start
 						LARGE_INTEGER frequency;
 						QueryPerformanceFrequency(&frequency);
@@ -779,7 +778,7 @@ namespace JAONPPROJECT {
 						fOut.precision(std::numeric_limits<long double>::digits10);
 						fOut << "\nUzyskany wynik obliczeñ: " << result << "\n";
 																						// Zapis czasu przetwarzania do pliku wynikowego
-						fOut << "Uzyskany czas w sekundach: " << interval << '\n';
+						fOut << "Czas wykonywania obliczeñ [ConvertToRpn i CalcRpn} w sekunach: " << interval << '\n';
 						fOut.close();
 					} // if fOut.good()
 					delete rpn;
